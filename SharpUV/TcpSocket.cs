@@ -65,9 +65,9 @@ namespace SharpUV
 		}
 	}
 
-	public class HttpServerSocket : TcpSocket
+	public class TcpServerSocket : TcpSocket
 	{
-		public HttpServerSocket(TcpServer server)
+		public TcpServerSocket(TcpServer server)
 			: base(server.Loop)
 		{
 			this.Server = server;

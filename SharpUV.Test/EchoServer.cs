@@ -7,12 +7,12 @@ namespace SharpUV.Test
 {
 	public class TcpEchoServer : TcpServer
 	{
-		protected override HttpServerSocket CreateClientSocket()
+		protected override TcpServerSocket CreateClientSocket()
 		{
 			return new TcpEchoServerSocket(this);
 		}
 
-		class TcpEchoServerSocket : HttpServerSocket
+		class TcpEchoServerSocket : TcpServerSocket
 		{
 			public TcpEchoServerSocket(TcpEchoServer server)
 				: base(server)

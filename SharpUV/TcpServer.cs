@@ -33,7 +33,7 @@ namespace SharpUV
 	{
 		public const int DefaultBackLog = 128;
 
-		private List<HttpServerSocket> _clients = new List<HttpServerSocket>();
+		private List<TcpServerSocket> _clients = new List<TcpServerSocket>();
 
 		public TcpServer()
 			: this(Loop.Default)
@@ -78,13 +78,13 @@ namespace SharpUV
 
 		private void OnClientClosed(object sender, EventArgs e)
 		{
-			var client = (HttpServerSocket) sender;
+			var client = (TcpServerSocket) sender;
 			_clients.Remove(client);
 		}
 
-		protected virtual HttpServerSocket CreateClientSocket()
+		protected virtual TcpServerSocket CreateClientSocket()
 		{
-			return new HttpServerSocket(this);
+			return new TcpServerSocket(this);
 		}
 
 		protected override void OnClose()

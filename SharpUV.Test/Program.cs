@@ -19,7 +19,7 @@ namespace SharpUV.Test
 			server = null;
 			System.GC.Collect();
 
-			Debug.WriteLine("Memory report: allocated {0}, deallocated {1}", Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
+			Console.WriteLine("Memory report: allocated {0}, deallocated {1}", Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
 		}
 	}
 }

@@ -26,48 +26,10 @@ using System.Runtime.InteropServices;
 namespace Libuv
 {
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct uv_handle_t
-	{
-		internal uv_handle_type type;
-		internal IntPtr close_cb;
-		internal IntPtr data;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
 	internal struct uv_req_t
 	{
-		internal uv_req_type type;
 		internal IntPtr data;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct uv_connect_t
-	{
 		internal uv_req_type type;
-		internal IntPtr data;
-		#if !__MonoCS__
-		internal NativeOverlapped overlapped;
-		internal IntPtr queued_bytes;
-		internal uv_err_t error;
-		internal IntPtr next_req;
-		#endif
-		internal IntPtr cb;
-		internal IntPtr stream; //uv_stream_t*
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct uv_shutdown_t
-	{
-		internal uv_req_type type;
-		internal IntPtr data;
-		#if !__MonoCS__
-		internal NativeOverlapped overlapped;
-		internal IntPtr queued_bytes;
-		internal uv_err_t error;
-		internal IntPtr next_req;
-		#endif
-		internal IntPtr handle;
-		internal IntPtr cb;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -189,20 +151,24 @@ namespace Libuv
 		UV_CHECK,
 		UV_FS_EVENT,
 		UV_FS_POLL,
+		UV_HANDLE,
 		UV_IDLE,
 		UV_NAMED_PIPE,
 		UV_POLL,
 		UV_PREPARE,
 		UV_PROCESS,
+		UV_STREAM,
 		UV_TCP,
 		UV_TIMER,
 		UV_TTY,
-		UV_UDP
+		UV_UDP,
+		UV_SIGNAL
 	}
 
 	internal enum uv_req_type
 	{
 		UV_UNKNOWN_REQ = 0,
+		UV_REQ,
 		UV_CONNECT,
 		UV_WRITE,
 		UV_SHUTDOWN,

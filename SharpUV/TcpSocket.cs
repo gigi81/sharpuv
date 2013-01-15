@@ -24,13 +24,28 @@ using Libuv;
 
 namespace SharpUV
 {
+	public enum TcpClientSocketStatus
+	{
+		Disconnected = 0,
+		Connecting = 1,
+		Connected
+	}
+
 	public class TcpClientSocket : TcpSocket
 	{
+		public TcpClientSocket()
+			: this(Loop.Default)
+		{
+		}
+
 		public TcpClientSocket(Loop loop)
 			: base(loop)
 		{
 			this.Connection = this.Alloc(uv_req_type.UV_CONNECT);
+			this.Status = TcpClientSocketStatus.Disconnected;
 		}
+
+		public TcpClientSocketStatus Status { get; private set; }
 
 		/// <summary>
 		/// Connection handle
@@ -42,14 +57,16 @@ namespace SharpUV
 		{
 			var info = Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port);
 			CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, info, this.OnConnect));
+			this.Status = TcpClientSocketStatus.Connecting;
 		}
 
 		private void OnConnect(IntPtr connection, int status)
 		{
-			//var conn = (uv_connect_t)Marshal.PtrToStructure(connection, typeof(uv_connect_t));
+			this.Status = status == 0 ? TcpClientSocketStatus.Connected : TcpClientSocketStatus.Disconnected;
+			this.OnConnect();
 		}
 
-		protected void OnConnect()
+		protected virtual void OnConnect()
 		{
 		}
 

@@ -45,6 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataChecker.cs" />
+    <Compile Include="EchoClient.cs" />
+    <Compile Include="ImmutableArray\ImmutableArray.cs" />
+    <Compile Include="ImmutableArray\ImmutableArrayEnumerator.cs" />
+    <Compile Include="ImmutableArray\ImmutableArrayInternal.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="EchoServer.cs" />

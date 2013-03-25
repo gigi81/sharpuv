@@ -29,6 +29,8 @@ namespace SharpUV
 {
 	public class Loop : IDisposable
 	{
+		internal readonly BufferManager BufferManager = new BufferManager();
+
 		private static readonly Loop DefaultLoop = new Loop(Uvi.uv_default_loop());
 		private Dictionary<IntPtr, int> _allocs = new Dictionary<IntPtr, int>();
 

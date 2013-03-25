@@ -47,6 +47,17 @@ namespace SharpUV
 			CheckError(Uvi.uv_tcp_init(this.Loop.Handle, this.Handle));
 		}
 
+		#region Delegates
+		private uv_connection_cb _connectionDelegate;
+
+		protected override void InitDelegates()
+		{
+			base.InitDelegates();
+			_connectionDelegate = new uv_connection_cb(this.OnClientConnected);
+		}
+
+		#endregion
+
 		public int BackLog { get; set; }
 
 		public int ConnectedClients { get { return _clients.Count; } }
@@ -58,14 +69,14 @@ namespace SharpUV
 				sockaddr_in info = Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port);
 
 				CheckError(Uvi.uv_tcp_bind(this.Handle, info));
-				CheckError(Uvi.uv_listen(this.Handle, this.BackLog, this.OnClientConnected));
+				CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
 			}
 			else if(endpoint.AddressFamily == AddressFamily.InterNetworkV6)
 			{
 				//sockaddr_in info = Uvi.uv_ipv6_addr(endpoint.Address.ToString(), endpoint.Port);
 
 				//CheckError(Uvi.uv_tcp_bind(this.Handle, info));
-				//CheckError(Uvi.uv_listen(this.Handle, this.BackLog, this.OnConnect));
+				//CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
 			}
 		}
 
@@ -90,7 +101,16 @@ namespace SharpUV
 		protected override void OnClose()
 		{
 			foreach (var client in _clients)
-				client.Shutdown();
+			{
+				try
+				{
+					client.Shutdown();
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine("Client shutdown returned error: {0}", ex.Message);
+				}
+			}
 
 			base.OnClose();
 		}

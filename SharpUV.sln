@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV", "SharpUV\SharpUV.csproj", "{CD76FA2B-246C-4FF3-98CE-12708DE052DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV.Test", "SharpUV.Test\SharpUV.Test.csproj", "{A8134943-71CD-475E-82B4-C7E1C6F8B609}"

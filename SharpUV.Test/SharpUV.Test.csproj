@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="DataChecker.cs" />
     <Compile Include="EchoClient.cs" />
+    <Compile Include="EchoClientsPool.cs" />
     <Compile Include="ImmutableArray\ImmutableArray.cs" />
     <Compile Include="ImmutableArray\ImmutableArrayEnumerator.cs" />
     <Compile Include="ImmutableArray\ImmutableArrayInternal.cs" />

@@ -26,6 +26,9 @@ using Libuv;
 
 namespace SharpUV
 {
+	/// <summary>
+	/// Status of an handle
+	/// </summary>
 	public enum HandleStatus
 	{
 		Open,
@@ -37,31 +40,52 @@ namespace SharpUV
 	{
 		public event EventHandler Closed;
 
+		/// <summary>
+		/// The number of current allocated handles
+		/// </summary>
+		public static int AllocatedHandles { get; private set; }
+
 		protected UvHandle(Loop loop, IntPtr handle)
+			: this(loop)
 		{
-			this.Loop = loop;
 			this.Handle = handle;
-			this.Status = HandleStatus.Open;
 		}
 
 		protected UvHandle(Loop loop, int handleSize)
+			: this(loop)
 		{
-			this.Loop = loop;
 			this.Handle = this.Alloc(handleSize);
-			this.Status = HandleStatus.Open;
 		}
 
 		internal UvHandle(Loop loop, uv_handle_type handleType)
+			: this(loop)
+		{
+			this.Handle = this.Alloc(handleType);
+		}
+
+		private UvHandle(Loop loop)
 		{
 			this.Loop = loop;
-			this.Handle = this.Alloc(handleType);
-			this.Status = HandleStatus.Open;
+			this.HandleStatus = HandleStatus.Open;
+			this.InitDelegates();
+
+			UvHandle.AllocatedHandles++;
 		}
 
 		~UvHandle()
 		{
 			this.Close();
 		}
+
+		#region Delegates
+		private uv_close_cb _closeDelegate;
+
+		protected virtual void InitDelegates()
+		{
+			_closeDelegate = new uv_close_cb(this.OnClose);
+		}
+		#endregion
+
 
 		/// <summary>
 		/// The Loop wherein this object is running
@@ -76,29 +100,31 @@ namespace SharpUV
 		/// <summary>
 		/// Handle status
 		/// </summary>
-		internal HandleStatus Status { get; private set; }
+		internal HandleStatus HandleStatus { get; private set; }
 
 		/// <summary>
-		/// Closes the stream. After this call the stream will not be valid
+		/// Closes the stream
 		/// </summary>
-		public void Close()
+		public void Close(bool dispose = false)
 		{
-			if (this.Status != HandleStatus.Open)
+			if (this.HandleStatus != HandleStatus.Open)
 				return;
 
-			Uvi.uv_close(this.Handle, this.OnClose);
-			this.Status = HandleStatus.Closing;
+			this.DisposeAfterClose = dispose;	
+			Uvi.uv_close(this.Handle, _closeDelegate);
+			this.HandleStatus = HandleStatus.Closing;
 		}
 
 		private void OnClose(IntPtr handle)
 		{
-			this.Status = HandleStatus.Closed;
+			this.HandleStatus = HandleStatus.Closed;
 			this.OnClose();
+			if (this.DisposeAfterClose)
+				this.Dispose(true);
 		}
 
 		protected virtual void OnClose()
 		{
-			this.Dispose(false);
 			if (this.Closed != null)
 				this.Closed(this, EventArgs.Empty);
 		}
@@ -128,7 +154,7 @@ namespace SharpUV
 			return this.Loop.Free(ptr);
 		}
 
-		#region Dispose Management
+		#region Disposal Management
 		/// <summary>
 		/// Indicates if the object has been disposed
 		/// </summary>
@@ -139,7 +165,10 @@ namespace SharpUV
 		/// </summary>
 		public void Dispose()
 		{
-			this.Close();
+			if (this.HandleStatus != HandleStatus.Closed)
+				this.Close(true); //will later call the dispose
+			else
+				this.Dispose(true);
 		}
 
 		protected virtual void Dispose(bool disposing)
@@ -152,7 +181,10 @@ namespace SharpUV
 
 			GC.SuppressFinalize(this);
 			this.IsDisposed = true;
+			UvHandle.AllocatedHandles--;
 		}
 		#endregion
+
+		public bool DisposeAfterClose { get; set; }
 	}
 }

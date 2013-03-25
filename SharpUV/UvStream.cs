@@ -55,9 +55,26 @@ namespace SharpUV
 		{
 		}
 
+		#region Delegates
+		private uv_alloc_cb _allocDelegate;
+		private uv_read_cb _readDelegate;
+		private uv_write_cb _writeDelegate;
+		private uv_shutdown_cb _shutdownDelegate;
+
+		protected override void InitDelegates()
+		{
+			base.InitDelegates();
+
+			_allocDelegate    = new uv_alloc_cb(this.OnAlloc);
+			_readDelegate     = new uv_read_cb(this.OnRead);
+			_writeDelegate    = new uv_write_cb(this.OnWrite);
+			_shutdownDelegate = new uv_shutdown_cb(this.OnShutdown);
+		}
+		#endregion
+
 		public void ReadStart()
 		{
-			CheckError(Uvi.uv_read_start(this.Handle, OnAlloc, this.OnRead));
+			CheckError(Uvi.uv_read_start(this.Handle, _allocDelegate, _readDelegate));
 			this.IsReading = true;
 		}
 
@@ -71,7 +88,15 @@ namespace SharpUV
 
 		private uv_buf_t OnAlloc(IntPtr tcp, SizeT size)
 		{
-			return this.CreateBuffer(size);
+			try
+			{
+				return CreateBuffer(size);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Buffer allocation failed with error: {0}", ex.Message);
+				return new uv_buf_t { data = IntPtr.Zero, len = IntPtr.Zero };
+			}
 		}
 
 		private void OnRead(IntPtr stream, IntPtr nread, uv_buf_t buf)
@@ -87,7 +112,7 @@ namespace SharpUV
 
 			this.DeleteBuffer(buf);
 
-			if(size < 0)
+			if (size < 0)
 				this.Close();
 		}
 
@@ -98,25 +123,18 @@ namespace SharpUV
 
 		public void Write(byte[] data, int offset, int length)
 		{
-			var requestHandle = this.Alloc(uv_req_type.UV_WRITE);
-			uv_buf_t buffer = CreateBuffer(data, offset, length);
-			uv_req_t request = new uv_req_t()
-			{
-				type = uv_req_type.UV_WRITE,
-				data = buffer.data
-			};
-
-			Marshal.StructureToPtr(request, requestHandle, false);
+			IntPtr requestHandle = IntPtr.Zero;
 
 			try
 			{
-				CheckError((Uvi.uv_write(requestHandle, this.Handle, new[] { buffer }, 1, this.OnWrite)));
-				_writes.Add(requestHandle, buffer);
+				requestHandle = this.InitWrite(data, offset, length);
+				CheckError((Uvi.uv_write(requestHandle, this.Handle, new[] { _writes[requestHandle] }, 1, _writeDelegate)));
 			}
 			catch (Exception)
 			{
-				this.Free(requestHandle);
-				this.DeleteBuffer(buffer);
+				if(requestHandle != IntPtr.Zero)
+					this.FreeWrite(requestHandle);
+
 				throw;
 			}
 		}
@@ -128,10 +146,32 @@ namespace SharpUV
 				var error = this.Loop.GetLastError();
 			}
 
+			this.FreeWrite(requestHandle);
+			this.OnWrite();
+		}
+
+		private IntPtr InitWrite(byte[] data, int offset, int length)
+		{
+			var requestHandle = this.Alloc(uv_req_type.UV_WRITE);
+			var buffer = this.CreateBuffer(data, offset, length);
+
+			uv_req_t request = new uv_req_t()
+			{
+				type = uv_req_type.UV_WRITE,
+				data = buffer.data
+			};
+
+			Marshal.StructureToPtr(request, requestHandle, false);
+
+			_writes.Add(requestHandle, buffer);
+			return requestHandle;
+		}
+
+		private void FreeWrite(IntPtr requestHandle)
+		{
 			this.DeleteBuffer(_writes[requestHandle]);
 			this.Free(requestHandle);
 			_writes.Remove(requestHandle);
-			this.OnWrite();
 		}
 
 		public void Shutdown()
@@ -140,7 +180,10 @@ namespace SharpUV
 
 			try
 			{
-				CheckError(Uvi.uv_shutdown(req, this.Handle, this.OnShutdown));
+				if (this.IsReading)
+					this.ReadStop();
+
+				CheckError(Uvi.uv_shutdown(req, this.Handle, _shutdownDelegate));
 			}
 			catch (Exception)
 			{
@@ -174,9 +217,16 @@ namespace SharpUV
 		}
 
 		#region Buffer management methods
+		internal uv_buf_t CreateBuffer(byte[] data, int offset, int length)
+		{
+			var ret = this.CreateBuffer((uint)length);
+			Marshal.Copy(data, offset, ret.data, length);
+			return ret;
+		}
+
 		internal uv_buf_t CreateBuffer(uint size)
 		{
-			return CreateBuffer(this.Alloc((int)size), size);
+			return this.CreateBuffer(this.Loop.BufferManager.Alloc((int)size), size);
 		}
 
 		internal uv_buf_t CreateBuffer(IntPtr data, uint size)
@@ -193,17 +243,10 @@ namespace SharpUV
 			};
 		}
 
-		internal uv_buf_t CreateBuffer(byte[] data, int offset, int length)
-		{
-			var ret = CreateBuffer((uint)length);
-			Marshal.Copy(data, offset, ret.data, length);
-			return ret;
-		}
-
 		internal void DeleteBuffer(uv_buf_t buffer)
 		{
 			if (buffer.data != IntPtr.Zero)
-				buffer.data = this.Free(buffer.data);
+				buffer.data = this.Loop.BufferManager.Free(buffer.data);
 		}
 		#endregion
 	}

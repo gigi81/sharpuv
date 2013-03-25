@@ -45,6 +45,18 @@ namespace SharpUV
 			this.Status = TcpClientSocketStatus.Disconnected;
 		}
 
+		#region Delegates
+		private uv_connect_cb _connectDelegate;
+
+		protected override void InitDelegates()
+		{
+			base.InitDelegates();
+			_connectDelegate = new uv_connect_cb(this.OnConnect);
+		}
+
+		#endregion
+
+
 		public TcpClientSocketStatus Status { get; private set; }
 
 		/// <summary>
@@ -56,7 +68,7 @@ namespace SharpUV
 		public void Connect(IPEndPoint endpoint)
 		{
 			var info = Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port);
-			CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, info, this.OnConnect));
+			CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, info, _connectDelegate));
 			this.Status = TcpClientSocketStatus.Connecting;
 		}
 

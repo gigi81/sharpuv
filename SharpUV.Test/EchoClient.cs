@@ -73,6 +73,7 @@ namespace SharpUV.Test
         private void RunReceive()
         {
             _lastCheck = this.SkipCheck || this.Checker.Check();
+            this.Checker.Flush();
         }
 
         private void AfterReceive()
@@ -83,7 +84,6 @@ namespace SharpUV.Test
             }
             else
             {
-                this.Checker.Flush();
                 if (this.Checker.IsEmpty && this.Completed)
                 {
                     Console.WriteLine("transfer completed");

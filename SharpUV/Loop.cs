@@ -212,7 +212,8 @@ namespace SharpUV
             }
             catch (Exception)
             {
-                _loop.Allocs.Free(_work);
+                _work = _loop.Allocs.Free(_work);
+                throw;
             }
         }
 

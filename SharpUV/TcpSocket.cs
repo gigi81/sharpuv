@@ -76,7 +76,7 @@ namespace SharpUV
                 CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
                 this.Status = TcpClientSocketStatus.Connecting;
 		    }
-		    catch (Exception)
+		    catch (Exception ex)
 		    {
                 _address = Free(_address);
 		        throw;

@@ -65,7 +65,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if exist "$(SolutionDir)libuv\$(ConfigurationName)\libuv.dll" goto nobuild
-call  "$(SolutionDir)libuv\vcbuild" $(ConfigurationName) shared x86
+call  "$(SolutionDir)libuv\vcbuild.bat" $(ConfigurationName) shared x86
 :nobuild
 
 copy  "$(SolutionDir)libuv\$(ConfigurationName)\libuv.dll" "$(TargetDir)"</PostBuildEvent>

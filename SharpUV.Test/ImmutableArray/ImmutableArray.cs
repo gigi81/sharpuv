@@ -357,13 +357,13 @@ namespace SharpUV.ImmutableArray
 				throw new ArgumentNullException("Cannot compare object with a null instance");
 
 			//check if is the same reference
-			if (obj == (object)this)
+			if (Object.ReferenceEquals(obj, this))
 				return true;
 
-			if (typeof(T[]).IsInstanceOfType(obj))
+			if (obj is T[])
 				return this.EqualsTo((T[])obj);
 
-			if (typeof(ImmutableArray<T>).IsInstanceOfType(obj))
+			if (obj is ImmutableArray<T>)
 				return this.EqualsTo((ImmutableArray<T>)obj);
 
 			return base.Equals(obj);

@@ -452,12 +452,36 @@ namespace SharpUV.ImmutableArray
 				return false;
 
 			//slow compare
-			for (int i = 0; i < this.Count; i++)
-				if (!this[i].Equals(array[i]))
-					return false;
+            int index = 0, total = this.Count;
 
-			return true;
+            while(total > 0)
+            {
+                var source = this.GetArrayAt(index, total);
+                var dest = array.GetArrayAt(index, total);
+                if (source.Length > dest.Length)
+                    source = source.SubArrayInternal(0, dest.Length);
+                else if(dest.Length > source.Length)
+                    dest = dest.SubArrayInternal(0, source.Length);
+
+                if (!source.Equals(dest))
+                    return false;
+
+                total -= source.Length;
+                index += source.Length;
+            }
+
+		    return true;
 		}
+
+        internal ImmutableArrayInternal<T> GetArrayAt(int index, int max = 0)
+        {
+            var ret = _arrays[this.GetArrayIndexAt(ref index)];
+            ret = ret.SubArrayInternal(index);
+            if (max > 0 && ret.Length > max)
+                ret.SubArrayInternal(0, max);
+
+            return ret;
+        }
 		#endregion
 
 		#region Members of ICloneable

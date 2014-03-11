@@ -28,7 +28,8 @@ namespace SharpUV
 {
 	public class UvStream : UvHandle
 	{
-		private Dictionary<IntPtr, uv_buf_t> _writes = new Dictionary<IntPtr, uv_buf_t>();
+	    private BufferCollection _buffers;
+	    private RequestCollection _requests;
 
 		/// <summary>
 		/// 
@@ -86,35 +87,46 @@ namespace SharpUV
 
 		public bool IsReading { get; private set; }
 
-		private uv_buf_t OnAlloc(IntPtr tcp, SizeT size)
+	    private BufferCollection Buffers
+	    {
+            get { return _buffers ?? (_buffers = new BufferCollection(this.Loop)); }
+	    }
+
+        private RequestCollection Requests
+        {
+            get { return _requests ?? (_requests = new RequestCollection(this.Loop, this.Buffers)); }
+        }
+
+		private void OnAlloc(IntPtr tcp, SizeT size, IntPtr buf)
 		{
 			try
 			{
-				return CreateBuffer(size);
+                this.Buffers.AllocBuffer(buf, (uint)size.Value);
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine("Buffer allocation failed with error: {0}", ex.Message);
-				return new uv_buf_t { data = IntPtr.Zero, len = IntPtr.Zero };
 			}
 		}
 
-		private void OnRead(IntPtr stream, IntPtr nread, uv_buf_t buf)
+        private void OnRead(IntPtr stream, SSizeT nread, IntPtr buf)
 		{
-			int size = (int) nread;
+            if (nread.Value > 0)
+                this.OnRead(this.Buffers.CopyAndDeleteBuffer(buf, (int)nread.Value));
 
-			if (size > 0)
-			{
-				var data = new byte[size];
-				Marshal.Copy(buf.data, data, 0, size);
-				this.OnRead(data);
-			}
-
-			this.DeleteBuffer(buf);
-
-			if (size < 0)
+            if (nread.Value < 0)
 				this.Close();
 		}
+
+	    public bool CanRead
+	    {
+            get { return Uvi.uv_is_readable(this.Handle) != 0; }
+	    }
+
+        public bool CanWrite
+        {
+            get { return Uvi.uv_is_writable(this.Handle) != 0; }
+        }
 
 		public void Write(byte[] data)
 		{
@@ -127,13 +139,13 @@ namespace SharpUV
 
 			try
 			{
-				requestHandle = this.InitWrite(data, offset, length);
-				CheckError((Uvi.uv_write(requestHandle, this.Handle, new[] { _writes[requestHandle] }, 1, _writeDelegate)));
+                requestHandle = this.Requests.Create(uv_req_type.UV_WRITE, data, offset, length);
+                CheckError((Uvi.uv_write(requestHandle, this.Handle, new[] { this.Requests[requestHandle] }, 1, _writeDelegate)));
 			}
 			catch (Exception)
 			{
 				if(requestHandle != IntPtr.Zero)
-					this.FreeWrite(requestHandle);
+                    this.Requests.Delete(requestHandle);
 
 				throw;
 			}
@@ -141,42 +153,19 @@ namespace SharpUV
 
 		private void OnWrite(IntPtr requestHandle, int status)
 		{
+            this.Requests.Delete(requestHandle);
+
 			if (status != 0)
 			{
 				var error = this.Loop.GetLastError();
 			}
 
-			this.FreeWrite(requestHandle);
 			this.OnWrite();
-		}
-
-		private IntPtr InitWrite(byte[] data, int offset, int length)
-		{
-			var requestHandle = this.Alloc(uv_req_type.UV_WRITE);
-			var buffer = this.CreateBuffer(data, offset, length);
-
-			uv_req_t request = new uv_req_t()
-			{
-				type = uv_req_type.UV_WRITE,
-				data = buffer.data
-			};
-
-			Marshal.StructureToPtr(request, requestHandle, false);
-
-			_writes.Add(requestHandle, buffer);
-			return requestHandle;
-		}
-
-		private void FreeWrite(IntPtr requestHandle)
-		{
-			this.DeleteBuffer(_writes[requestHandle]);
-			this.Free(requestHandle);
-			_writes.Remove(requestHandle);
 		}
 
 		public void Shutdown()
 		{
-			var req = this.Alloc(uv_req_type.UV_SHUTDOWN);
+			IntPtr req = this.Alloc(uv_req_type.UV_SHUTDOWN);
 
 			try
 			{
@@ -194,12 +183,13 @@ namespace SharpUV
 
 		private void OnShutdown(IntPtr req, int status)
 		{
+            this.Free(req);
+
 			if (status != 0)
 			{
 				var error = this.Loop.GetLastError();
 			}
 
-			this.Free(req);
 			this.OnShutdown();
 			this.Close();
 		}
@@ -215,39 +205,5 @@ namespace SharpUV
 		protected virtual void OnShutdown()
 		{
 		}
-
-		#region Buffer management methods
-		internal uv_buf_t CreateBuffer(byte[] data, int offset, int length)
-		{
-			var ret = this.CreateBuffer((uint)length);
-			Marshal.Copy(data, offset, ret.data, length);
-			return ret;
-		}
-
-		internal uv_buf_t CreateBuffer(uint size)
-		{
-			return this.CreateBuffer(this.Loop.BufferManager.Alloc((int)size), size);
-		}
-
-		internal uv_buf_t CreateBuffer(IntPtr data, uint size)
-		{
-			//return Uvi.uv_buf_init(data, size);
-			return new uv_buf_t()
-			{
-				data = data,
-#if __MonoCS__
-				len = (IntPtr)size
-#else
-				len = (IntPtr)size
-#endif
-			};
-		}
-
-		internal void DeleteBuffer(uv_buf_t buffer)
-		{
-			if (buffer.data != IntPtr.Zero)
-				buffer.data = this.Loop.BufferManager.Free(buffer.data);
-		}
-		#endregion
 	}
 }

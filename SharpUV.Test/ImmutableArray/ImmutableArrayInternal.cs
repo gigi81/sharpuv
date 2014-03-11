@@ -68,9 +68,9 @@ namespace SharpUV.ImmutableArray
 			if ((sourceIndex + length) > data.Length)
 				throw new ArgumentOutOfRangeException("The sourceIndex and length specified overcome the source ByteArray length");
 
-			this.Offset = 0;
-			this.Data = ImmutableArrayInternal<T>.AllocInternalArray(sourceIndex, data, length);
-			this.Length = length;
+			_offset = 0;
+			_data = ImmutableArrayInternal<T>.AllocInternalArray(sourceIndex, data, length);
+			_length = length;
 		}
 
 		public ImmutableArrayInternal(ImmutableArrayInternal<T> data)
@@ -94,16 +94,16 @@ namespace SharpUV.ImmutableArray
 			if ((sourceIndex + length) > data.Length)
 				throw new ArgumentOutOfRangeException("The sourceIndex and length specified overcome the source ByteArray length");
 
-			this.Offset = data.Offset + sourceIndex;
-			this.Data = data.Data;
-			this.Length = length;
+			_offset = data.Offset + sourceIndex;
+			_data = data.Data;
+			_length = length;
 		}
 
 		public ImmutableArrayInternal(ICollection<T> array)
 		{
-			this.Offset = 0;
-			this.Data = AllocInternalArray(array);
-			this.Length = array.Count;
+			_offset = 0;
+			_data = AllocInternalArray(array);
+			_length = array.Count;
 		}
 		#endregion
 
@@ -112,14 +112,13 @@ namespace SharpUV.ImmutableArray
 		{
 			get
 			{
-				return this.Data[this.Offset + index];
+				return _data[_offset + index];
 			}
 		}
 
 		public int Length
 		{
 			get { return _length; }
-			protected set { _length = value; }
 		}
 
 		public ImmutableArrayInternal<T> SubArrayInternal(int sourceIndex)
@@ -142,7 +141,7 @@ namespace SharpUV.ImmutableArray
 
 		public void CopyTo(Array array, int index, int length)
 		{
-			Array.Copy(this.Data, this.Offset, array, index, length);
+			Array.Copy(_data, _offset, array, index, length);
 		}
 		#endregion
 
@@ -150,13 +149,11 @@ namespace SharpUV.ImmutableArray
 		protected int Offset
 		{
 			get { return _offset; }
-			set { _offset = value; }
 		}
 
 		protected T[] Data
 		{
 			get { return _data; }
-			set { _data = value; }
 		}
 		#endregion
 
@@ -167,10 +164,10 @@ namespace SharpUV.ImmutableArray
 			if (obj == null)
 				throw new ArgumentNullException("Cannot compare object with a null instance");
 
-			if (typeof(T[]).IsInstanceOfType(obj))
+			if (obj is T[])
 				return this.EqualsTo((T[])obj);
 
-			if (typeof(ImmutableArrayInternal<T>).IsInstanceOfType(obj))
+			if (obj is ImmutableArrayInternal<T>)
 				return this.EqualsTo((ImmutableArrayInternal<T>)obj);
 
 			return base.Equals(obj);
@@ -231,8 +228,9 @@ namespace SharpUV.ImmutableArray
 				return false;
 
 			//slow compare
+            int sourceIndex = this._offset, destIndex = array._offset;
 			for (int i = 0; i < this.Length; i++)
-				if (!this[i].Equals(array[i]))
+				if (!this._data[sourceIndex++].Equals(array._data[destIndex++]))
 					return false;
 
 			return true;

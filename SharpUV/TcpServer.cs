@@ -33,7 +33,8 @@ namespace SharpUV
 	{
 		public const int DefaultBackLog = 128;
 
-		private List<TcpServerSocket> _clients = new List<TcpServerSocket>();
+		private readonly List<TcpServerSocket> _clients = new List<TcpServerSocket>();
+	    private IntPtr _address = IntPtr.Zero;
 
 		public TcpServer()
 			: this(Loop.Default)
@@ -64,20 +65,16 @@ namespace SharpUV
 
 		public void StartListening(IPEndPoint endpoint)
 		{
-			if (endpoint.AddressFamily == AddressFamily.InterNetwork)
-			{
-				sockaddr_in info = Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port);
-
-				CheckError(Uvi.uv_tcp_bind(this.Handle, info));
-				CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
-			}
-			else if(endpoint.AddressFamily == AddressFamily.InterNetworkV6)
-			{
-				//sockaddr_in info = Uvi.uv_ipv6_addr(endpoint.Address.ToString(), endpoint.Port);
-
-				//CheckError(Uvi.uv_tcp_bind(this.Handle, info));
-				//CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
-			}
+		    try
+		    {
+		        _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
+                CheckError(Uvi.uv_tcp_bind(this.Handle, _address, 0));
+                CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
+		    }
+		    catch (Exception)
+		    {
+		        _address = Free(_address);
+		    }
 		}
 
 		private void OnClientConnected(IntPtr server, int status)
@@ -113,6 +110,7 @@ namespace SharpUV
 			}
 
 			base.OnClose();
+            _address = Free(_address);
 		}
 	}
 }

@@ -20,6 +20,7 @@
 
 using System;
 using System.Net;
+using System.Net.Sockets;
 using Libuv;
 
 namespace SharpUV
@@ -33,6 +34,8 @@ namespace SharpUV
 
 	public class TcpClientSocket : TcpSocket
 	{
+	    private IntPtr _address;
+
 		public TcpClientSocket()
 			: this(Loop.Default)
 		{
@@ -67,9 +70,17 @@ namespace SharpUV
 
 		public void Connect(IPEndPoint endpoint)
 		{
-			var info = Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port);
-			CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, info, _connectDelegate));
-			this.Status = TcpClientSocketStatus.Connecting;
+		    try
+		    {
+                _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
+                CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
+                this.Status = TcpClientSocketStatus.Connecting;
+		    }
+		    catch (Exception)
+		    {
+                _address = Free(_address);
+		        throw;
+		    }
 		}
 
 		private void OnConnect(IntPtr connection, int status)
@@ -91,6 +102,8 @@ namespace SharpUV
 			}
 
 			base.Dispose(disposing);
+
+            _address = Free(_address);
 		}
 	}
 
@@ -123,5 +136,28 @@ namespace SharpUV
 		{
 			CheckError(Uvi.uv_tcp_init(this.Loop.Handle, this.Handle));
 		}
+
+        internal static IntPtr AllocSocketAddress(IPEndPoint endpoint, Loop loop)
+        {
+            IntPtr ret;
+
+            switch (endpoint.AddressFamily)
+            {
+                case AddressFamily.InterNetwork:
+                    ret = loop.Allocs.Alloc(Uvi.sockaddr_in_size);
+                    loop.CheckError(Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port, ret));
+                    break;
+
+                case AddressFamily.InterNetworkV6:
+                    ret = loop.Allocs.Alloc(Uvi.sockaddr_in6_size);
+                    loop.CheckError(Uvi.uv_ip6_addr(endpoint.Address.ToString(), endpoint.Port, ret));
+                    break;
+
+                default:
+                    throw new ArgumentException(String.Format("AddressFamily {0} not supported", endpoint.AddressFamily));
+            }
+
+            return ret;
+        }
 	}
 }

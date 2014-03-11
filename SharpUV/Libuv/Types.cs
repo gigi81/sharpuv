@@ -74,32 +74,24 @@ namespace Libuv
 	}
 #endif
 
+
 	// From: http://www.elitepvpers.com/forum/co2-programming/159327-advanced-winsock-c.html
 	[StructLayout(LayoutKind.Sequential, Size = 16)]
 	internal struct sockaddr_in
 	{
-		internal const int Size = 16;
-
 		internal short sin_family;
 		internal ushort sin_port;
-		internal struct in_addr
-		{
-			internal uint S_addr;
-			internal struct _S_un_b
-			{
-				internal byte s_b1, s_b2, s_b3, s_b4;
-			}
-			internal _S_un_b S_un_b;
-			internal struct _S_un_w
-			{
-				internal ushort s_w1, s_w2;
-			}
-			internal _S_un_w S_un_w;
-		}
-		internal in_addr sin_addr;
 	}
 
-	internal enum uv_err_code
+    // From: http://www.pinvoke.net/default.aspx/Structures/sockaddr_in6.html
+    [StructLayout(LayoutKind.Sequential, Size = 28)]
+    internal struct sockaddr_in6
+    {
+        internal short sin6_family;
+        internal ushort sin6_port;
+    }
+
+    internal enum uv_err_code
 	{
 		UV_UNKNOWN = -1,
 		UV_OK = 0,
@@ -219,19 +211,34 @@ namespace Libuv
 		S_IXOTH  = 0x0001		// others have execute permission 
 	}
 
+    [Flags]
+    public enum uv_tcp_flags : uint
+    {
+        /// <summary>
+        /// Used with uv_tcp_bind, when an IPv6 address is used
+        /// </summary>
+        UV_TCP_IPV6ONLY = 1
+    }
+
 	#region Callbacks
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void uv_shutdown_cb(IntPtr req, int status);
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	internal delegate uv_buf_t uv_alloc_cb(
+	internal delegate void uv_alloc_cb(
 				IntPtr stream,
 				[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SizeTMarshaler")]
-				SizeT suggested_size
+				SizeT suggested_size,
+                IntPtr buf
 	);
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	internal delegate void uv_read_cb(IntPtr req, IntPtr nread, uv_buf_t buf);
+    internal delegate void uv_read_cb(
+                IntPtr req,
+                [MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SSizeTMarshaler")]
+                SSizeT nread,
+                IntPtr buf
+    ); //buf = uv_buf_t
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void uv_write_cb(IntPtr req, int status);
@@ -253,6 +260,15 @@ namespace Libuv
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void uv_fs_cb(IntPtr req); // uv_fs_t*
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void uv_thread_run(IntPtr arg);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void uv_work_cb(IntPtr req); //uv_work_t* req
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void uv_after_work_cb(IntPtr req, int status); //uv_work_t* req
 
 	#endregion
 }

@@ -29,16 +29,10 @@ namespace SharpUV.Test
 
 		public bool Check()
 		{
-			return true;
-			//TODO
-			//if (_recvData.Count > _sentData.Count)
-			//	return false;
+			if (_recvData.Count > _sentData.Count)
+				return false;
 
-			//for (int i = 0; i < _recvData.Count; i++)
-			//	if (_sentData[i] != _recvData[i])
-			//		return false;
-
-			//return true;
+		    return _sentData.SubArray(0, _recvData.Count).Equals(_recvData);
 		}
 
 		public void Flush()

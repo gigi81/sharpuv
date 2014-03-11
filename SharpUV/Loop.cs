@@ -29,10 +29,11 @@ namespace SharpUV
 {
 	public class Loop : IDisposable
 	{
-		internal readonly BufferManager BufferManager = new BufferManager();
+        private static readonly Loop DefaultLoop = new Loop(Uvi.uv_default_loop());
 
-		private static readonly Loop DefaultLoop = new Loop(Uvi.uv_default_loop());
-		private Dictionary<IntPtr, int> _allocs = new Dictionary<IntPtr, int>();
+		internal readonly BufferManager BufferManager = new BufferManager();
+        internal readonly LoopAllocs Allocs = new LoopAllocs();
+        internal readonly List<LoopWork> Works = new List<LoopWork>();
 
 		public Loop()
 			: this(Uvi.uv_loop_new())
@@ -84,30 +85,15 @@ namespace SharpUV
 			get { return DefaultLoop; }
 		}
 
-		internal IntPtr Alloc(int size)
-		{
-			var ret = Marshal.AllocHGlobal(size);
-			_allocs.Add(ret, size);
-			this.AllocatedBytes += (ulong)size;
-			return ret;
-		}
+        public void QueueWork(Action run, Action after)
+        {
+            this.Works.Add(new LoopWork(this, run, after, this.WorkCompleted));
+        }
 
-		internal IntPtr Free(IntPtr ptr)
-		{
-			if (ptr == IntPtr.Zero)
-				return ptr;
-
-			Marshal.FreeHGlobal(ptr);
-
-			this.DeAllocatedBytes += (ulong)_allocs[ptr];
-			_allocs.Remove(ptr);
-
-			return IntPtr.Zero;
-		}
-
-		public ulong AllocatedBytes { get; private set; }
-
-		public ulong DeAllocatedBytes { get; private set; }
+        private void WorkCompleted(LoopWork work)
+        {
+            this.Works.Remove(work);
+        }
 
 		#region Dispose Management
 		/// <summary>
@@ -142,5 +128,121 @@ namespace SharpUV
 			this.IsDisposed = true;
 		}
 		#endregion
-	}
+
+        public ulong AllocatedBytes { get { return this.Allocs.AllocatedBytes; } }
+
+        public ulong DeAllocatedBytes { get { return this.Allocs.DeAllocatedBytes; } }
+
+        public int PendingWorks { get { return this.Works.Count; } }
+
+        public void DumpAllocs()
+        {
+            this.Allocs.DumpAllocs();
+        }
+    }
+
+    internal class LoopAllocs
+    {
+        private readonly Dictionary<IntPtr, ulong> _allocs = new Dictionary<IntPtr, ulong>();
+        private ulong _allocated = 0;
+        private ulong _deallocated = 0;
+
+        internal IntPtr Alloc(int size)
+        {
+            return this.Alloc((ulong) size);
+        }
+
+        internal IntPtr Alloc(ulong size)
+        {
+            var ret = Marshal.AllocHGlobal((int)size);
+            _allocs.Add(ret, size);
+            _allocated += size;
+            return ret;
+        }
+
+        internal IntPtr Free(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+                return ptr;
+
+            _deallocated += _allocs[ptr];
+            _allocs.Remove(ptr);
+
+            Marshal.FreeHGlobal(ptr);
+
+            return IntPtr.Zero;
+        }
+
+        public void DumpAllocs()
+        {
+            foreach (var alloc in _allocs)
+            {
+                Console.WriteLine("allocated {0}", alloc.Value);
+            }
+        }
+
+        public ulong AllocatedBytes { get { return _allocated; } }
+
+        public ulong DeAllocatedBytes { get { return _deallocated; } }
+    }
+
+    internal class LoopWork : IDisposable
+    {
+        private readonly uv_work_cb _run;
+        private readonly uv_after_work_cb _after;
+        private readonly Action _runAction;
+        private readonly Action _afterAction;
+        private readonly Action<LoopWork> _completed;
+        private readonly Loop _loop;
+        private readonly IntPtr _work;
+
+        public LoopWork(Loop loop, Action run, Action after, Action<LoopWork> completed)
+        {
+            _run = new uv_work_cb(this.Run);
+            _after = new uv_after_work_cb(this.After);
+            _runAction = run;
+            _afterAction = after;
+            _completed = completed;
+            _loop = loop;
+            _work = _loop.Allocs.Alloc(Uvi.uv_req_size(uv_req_type.UV_WORK));
+
+            try
+            {
+                _loop.CheckError(Uvi.uv_queue_work(_loop.Handle, _work, _run, _after));
+            }
+            catch (Exception)
+            {
+                _loop.Allocs.Free(_work);
+            }
+        }
+
+        private void Run(IntPtr work)
+        {
+            if(_runAction != null)
+                _runAction();
+        }
+
+        private void After(IntPtr work, int status)
+        {
+            try
+            {
+                if (_afterAction != null)
+                    _afterAction();
+            }
+            finally
+            {
+                _completed(this);
+                this.Dispose();
+            }
+        }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            _loop.Allocs.Free(_work);
+        }
+
+        #endregion
+    }
 }

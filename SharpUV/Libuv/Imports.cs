@@ -32,6 +32,10 @@ namespace Libuv
 	{
 	    private const string ModuleName = "libuv";
 
+        internal const int sockaddr_in_size = 16;
+
+        internal const int sockaddr_in6_size = 28;
+
 		#region Loop functions
 
         [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
@@ -105,14 +109,14 @@ namespace Libuv
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void uv_close(IntPtr handle, uv_close_cb cb); // uv_handle_t*
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_tcp_connect(IntPtr connect, IntPtr tcp_handle, sockaddr_in address, uv_connect_cb cb); // uv_connect_t*, uv_tcp_t*
+        internal static extern int uv_tcp_connect(IntPtr connect, IntPtr tcp_handle, IntPtr address, uv_connect_cb cb); // uv_connect_t*, uv_tcp_t*, sockaddr_in* or sockaddr_in6*
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sockaddr_in uv_ip4_addr(string ip, int port);
-		//[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern sockaddr_in6 uv_ip6_addr(string ip, int port);
+        internal static extern int uv_ip4_addr(string ip, int port, IntPtr address); //sockaddr_in
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_ip6_addr(string ip, int port, IntPtr address); //sockaddr_in6
 
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_tcp_bind(IntPtr prepare, sockaddr_in address); // uv_tcp_t*
+        internal static extern int uv_tcp_bind(IntPtr handle, IntPtr address, uv_tcp_flags flags); // uv_tcp_t*, sockaddr_in*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_listen(IntPtr stream, int backlog, uv_connection_cb cb); // uv_stream_t*
 
@@ -143,7 +147,6 @@ namespace Libuv
 		internal static extern int uv_spawn(IntPtr loop, IntPtr process, uv_process_options_t options); // uv_loop_t*, uv_process_t*
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_process_kill(IntPtr process, int signum); // uv_process_t*
-
 
 		#region Filesystem functions
 		/// <summary>
@@ -263,12 +266,32 @@ namespace Libuv
 
 		#endregion
 
-		//[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern uv_buf_t uv_buf_init(IntPtr data, IntPtr len);
+        #region Threading
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_thread_create(IntPtr tid, uv_thread_run entry, IntPtr arg);
 
-		//* UV_EXTERN */
-		//internal static extern int uv_is_readable(IntPtr handle); //uv_stream_t*
-		//* UV_EXTERN */
-		//internal static extern int uv_is_writable(IntPtr handle); //uv_stream_t*
-	}
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_thread_join(IntPtr tid);
+
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern uint uv_thread_self();
+
+        /// <summary>
+        /// Queues a work request to execute asynchronously on the thread pool
+        /// </summary>
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_queue_work(IntPtr loop, IntPtr req, uv_work_cb work_cb, uv_after_work_cb after_work_cb); //uv_work_t* req, 
+
+        #endregion
+
+        #region Utility functions
+        [DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern uv_buf_t uv_buf_init(IntPtr data, uint size);
+
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_is_readable(IntPtr handle); //uv_stream_t*
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_is_writable(IntPtr handle); //uv_stream_t*
+        #endregion
+    }
 }

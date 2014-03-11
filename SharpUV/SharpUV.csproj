@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BufferCollection.cs" />
     <Compile Include="BufferManager.cs" />
     <Compile Include="FileHandle.cs" />
     <Compile Include="FileStream.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="Libuv\Imports.cs" />
+    <Compile Include="Libuv\SSizeT.cs" />
     <Compile Include="Loop.cs" />
     <Compile Include="UvHandle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

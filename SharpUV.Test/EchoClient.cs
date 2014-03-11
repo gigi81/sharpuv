@@ -8,8 +8,8 @@ namespace SharpUV.Test
 {
 	class EchoClient : TcpClientSocket
 	{
-		private static Random Random = new Random();
-		private static IPEndPoint ServerEndPoint = new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 10000);
+		private static readonly Random Random = new Random();
+		private static readonly IPEndPoint ServerEndPoint = new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 10000);
 
 		public EchoClient(int packetSize, int total)
 		{
@@ -22,6 +22,8 @@ namespace SharpUV.Test
 		public int PacketSents { get; private set; }
 
 		public int PacketsTotal { get; private set; }
+
+        public bool SkipCheck { get; set; }
 
 		public bool Completed
 		{
@@ -54,41 +56,45 @@ namespace SharpUV.Test
 		{
 			base.OnConnect();
 			if (this.Status == TcpClientSocketStatus.Connected)
-			{
 				this.SendPacket();
-			}
 			else
-			{
 				this.Close();
-			}
 		}
 
 		protected override void OnRead(byte[] data)
 		{
-			//Console.WriteLine("Client Received echo ({0} bytes)", data.Length);
-
 			base.OnRead(data);
 			this.Checker.Received(data);
-
-			if (!this.Checker.Check())
-			{
-				//error!!!
-			}
-			else
-			{
-				this.Checker.Flush();
-
-				if (this.Checker.IsEmpty && this.Completed)
-				{
-					Console.WriteLine("bytes limit reached");
-					this.Close();
-				}
-				else if (this.Checker.IsEmpty)
-				{
-					this.SendPacket();
-				}
-			}
+            this.Loop.QueueWork(this.RunReceive, this.AfterReceive);
 		}
+
+	    private bool _lastCheck = false;
+
+        private void RunReceive()
+        {
+            _lastCheck = this.SkipCheck || this.Checker.Check();
+        }
+
+        private void AfterReceive()
+        {
+            if (!_lastCheck)
+            {
+                Console.WriteLine("Data check failed");
+            }
+            else
+            {
+                this.Checker.Flush();
+                if (this.Checker.IsEmpty && this.Completed)
+                {
+                    Console.WriteLine("transfer completed");
+                    this.Close();
+                }
+                else if (this.Checker.IsEmpty)
+                {
+                    this.SendPacket();
+                }
+            }
+        }
 
 		protected override void OnWrite()
 		{

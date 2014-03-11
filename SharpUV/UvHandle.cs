@@ -43,7 +43,7 @@ namespace SharpUV
 		/// <summary>
 		/// The number of current allocated handles
 		/// </summary>
-		public static int AllocatedHandles { get; private set; }
+		public static int CurrentlyAllocatedHandles { get; private set; }
 
 		protected UvHandle(Loop loop, IntPtr handle)
 			: this(loop)
@@ -69,12 +69,12 @@ namespace SharpUV
 			this.HandleStatus = HandleStatus.Open;
 			this.InitDelegates();
 
-			UvHandle.AllocatedHandles++;
+			UvHandle.CurrentlyAllocatedHandles++;
 		}
 
 		~UvHandle()
 		{
-			this.Close();
+			this.Dispose();
 		}
 
 		#region Delegates
@@ -110,7 +110,7 @@ namespace SharpUV
 			if (this.HandleStatus != HandleStatus.Open)
 				return;
 
-			this.DisposeAfterClose = dispose;	
+			this.DisposeAfterClose = dispose;
 			Uvi.uv_close(this.Handle, _closeDelegate);
 			this.HandleStatus = HandleStatus.Closing;
 		}
@@ -136,7 +136,7 @@ namespace SharpUV
 
 		internal IntPtr Alloc(int size)
 		{
-			return this.Loop.Alloc(size);
+			return this.Loop.Allocs.Alloc(size);
 		}
 
 		internal IntPtr Alloc(uv_handle_type handleType)
@@ -151,7 +151,7 @@ namespace SharpUV
 
 		internal IntPtr Free(IntPtr ptr)
 		{
-			return this.Loop.Free(ptr);
+			return this.Loop.Allocs.Free(ptr);
 		}
 
 		#region Disposal Management
@@ -176,12 +176,14 @@ namespace SharpUV
 			if (this.IsDisposed)
 				return;
 
-			if (this.Handle != IntPtr.Zero)
-				this.Handle = this.Free(this.Handle);
+		    if (this.Handle != IntPtr.Zero)
+		    {
+		        this.Handle = this.Free(this.Handle);
+		        UvHandle.CurrentlyAllocatedHandles--;
+		    }
 
-			GC.SuppressFinalize(this);
-			this.IsDisposed = true;
-			UvHandle.AllocatedHandles--;
+            this.IsDisposed = true;
+		    GC.SuppressFinalize(this);
 		}
 		#endregion
 

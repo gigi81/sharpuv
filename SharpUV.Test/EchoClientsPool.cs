@@ -5,11 +5,11 @@ using System.Text;
 
 namespace SharpUV.Test
 {
-	class EchoClientsPool
+	class EchoClientsPool : IDisposable
 	{
 		public event EventHandler Completed;
 
-		private EchoClient[] _clients;
+		private readonly EchoClient[] _clients;
 		private int _closed = 0;
 
 		public EchoClientsPool(int size, int packetSize, int total)
@@ -27,6 +27,16 @@ namespace SharpUV.Test
 
 		public int TotalBytes { get; private set; }
 
+	    public bool SkipCheck
+	    {
+	        get { return _clients[0].SkipCheck; }
+            set
+            {
+                for (int i = 0; i < _clients.Length; i++)
+                    _clients[i].SkipCheck = value;
+            }
+	    }
+
 		private void ClientClosed(object sender, EventArgs e)
 		{
 			if (++_closed >= _clients.Length)
@@ -39,10 +49,10 @@ namespace SharpUV.Test
 				_clients[i].Run();
 		}
 
-		public void Close()
+		public void Close(bool dispose = false)
 		{
 			for (int i = 0; i < _clients.Length; i++)
-				_clients[i].Close();
+                _clients[i].Close(dispose);
 		}
 
 		protected virtual void OnCompleted()
@@ -50,5 +60,21 @@ namespace SharpUV.Test
 			if (this.Completed != null)
 				this.Completed(this, EventArgs.Empty);
 		}
-	}
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            for (int i = 0; i < _clients.Length; i++)
+            {
+                if (_clients[i] == null)
+                    continue;
+
+                _clients[i].Dispose();
+                _clients[i] = null;
+            }
+        }
+
+        #endregion
+    }
 }

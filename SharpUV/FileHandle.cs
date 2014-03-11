@@ -37,7 +37,7 @@ namespace SharpUV
 
 	public abstract class FileHandle : IDisposable
 	{
-		private const int DefaultReadBufferSize = 1024*32;
+	    private const int DefaultReadBufferSize = 1024*32;
 
 		public event EventHandler Closed;
 
@@ -204,12 +204,12 @@ namespace SharpUV
 
 		internal IntPtr Alloc(int size)
 		{
-			return this.Loop.Alloc(size);
+			return this.Loop.Allocs.Alloc(size);
 		}
 
 		internal IntPtr Free(IntPtr ptr)
 		{
-			return this.Loop.Free(ptr);
+            return this.Loop.Allocs.Free(ptr);
 		}
 
 		internal IntPtr CreateRequest()

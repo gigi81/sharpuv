@@ -9,30 +9,46 @@ namespace SharpUV
 {
 	internal class BufferManager : IDisposable
 	{
-		private List<BufferManagerItem> _usedBuffers = new List<BufferManagerItem>();
-		private List<BufferManagerItem> _freeBuffers = new List<BufferManagerItem>();
+		private readonly List<BufferManagerItem> _usedBuffers = new List<BufferManagerItem>();
+		private readonly List<BufferManagerItem> _freeBuffers = new List<BufferManagerItem>();
+	    private long _allocatedBytes = 0;
+	    private long _inUseBytes = 0;
 
 		internal IntPtr Alloc(int size)
 		{
-			IntPtr ret = this.FindFree(size);
+		    if (size <= 0)
+		        return IntPtr.Zero;
+
+			IntPtr ret = this.GetFree(size);
 			if (ret != IntPtr.Zero)
 				return ret;
 
-			ret = Marshal.AllocHGlobal(size);
-			_usedBuffers.Add(new BufferManagerItem(ret, size));
-			return ret;
+			return AllocBuffer(size);
 		}
 
-		internal IntPtr Free(IntPtr buffer)
+	    private IntPtr AllocBuffer(int size)
+	    {
+            IntPtr ret = Marshal.AllocHGlobal(size);
+	        _usedBuffers.Add(new BufferManagerItem(ret, size));
+	        _allocatedBytes += size;
+	        _inUseBytes += size;
+	        return ret;
+	    }
+
+	    internal IntPtr Free(IntPtr buffer)
 		{
+		    if (buffer == IntPtr.Zero)
+                return IntPtr.Zero;
+
 			var ret = _usedBuffers.Find(i => i.Data == buffer);
 			_usedBuffers.Remove(ret);
 			_freeBuffers.Add(ret);
+		    _inUseBytes -= ret.Size;
 
 			return IntPtr.Zero;
 		}
 
-		private IntPtr FindFree(int size)
+		private IntPtr GetFree(int size)
 		{
 			for (int i = 0; i < _freeBuffers.Count; i++)
 			{
@@ -42,6 +58,7 @@ namespace SharpUV
 				var ret = _freeBuffers[i];
 				_usedBuffers.Add(ret);
 				_freeBuffers.Remove(ret);
+			    _inUseBytes += ret.Size;
 				return ret.Data;
 			}
 
@@ -58,8 +75,10 @@ namespace SharpUV
 			foreach (var buffer in _usedBuffers)
 				Marshal.FreeHGlobal(buffer.Data);
 
-			_freeBuffers = new List<BufferManagerItem>();
-			_usedBuffers = new List<BufferManagerItem>();
+			_freeBuffers.Clear();
+			_usedBuffers.Clear();
+            _allocatedBytes = 0;
+		    _inUseBytes = 0;
 		}
 
 		#endregion
@@ -67,8 +86,8 @@ namespace SharpUV
 
 	internal struct BufferManagerItem
 	{
-		private IntPtr _data;
-		private int _size;
+		private readonly IntPtr _data;
+		private readonly int _size;
 
 		public BufferManagerItem(IntPtr data, int size)
 		{

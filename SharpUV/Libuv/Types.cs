@@ -33,13 +33,6 @@ namespace Libuv
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct uv_err_t
-	{
-		internal uv_err_code code;
-		internal int sys_errno_;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
 	internal struct uv_process_options_t
 	{
 		internal uv_exit_cb exit_cb;
@@ -169,48 +162,7 @@ namespace Libuv
 		UV_WORK,
 		UV_GETADDRINFO
 	}
-
-	public enum FileAccessMode
-	{
-		ReadOnly  = 0x0000,  /* open for reading only */
-		WriteOnly = 0x0001,  /* open for writing only */
-		ReadWrite = 0x0002 /* open for reading and writing */
-	}
-
-	[Flags]
-	public enum FileOpenMode
-	{
-		Default 	 = 0x0000,
-		Append 		 = 0x0008,  /* writes done at eof */
-		Create 		 = 0x0100,  /* create and open file */
-		Truncate 	 = 0x0200,  /* open and truncate */
-		OnlyIfExists = 0x0400,  /* open only if file doesn't already exist */
-		TextMode 	 = 0x4000,  /* file mode is text (translated) */
-		BinaryMode 	 = 0x8000  /* file mode is binary (untranslated) */
-	}
-
-	[Flags]
-	public enum FilePermissions
-	{
-		S_IRWXU  = 0x0700,		// user (file owner) has read, write and execute permission 
-		S_IRUSR  = 0x0400 ,		// user has read permission 
-		S_IREAD  = 0x0400,
-		S_IWUSR  = 0x0200,		// user has write permission 
-		S_IWRITE = 0x0200,
-		S_IXUSR  = 0x0100,		// user has execute permission
-		S_IEXEC  = 0x0100,
-
-		S_IRWXG  = 0x0070,		// group has read, write and execute permission     
-		S_IRGRP  = 0x0040,		// group has read permission 
-		S_IWGRP  = 0x0020,		// group has write permission
-		S_IXGRP  = 0x0010,		// group has execute permission 
-
-		S_IRWXO  = 0x0007,		// others have read, write and execute permission 
-		S_IROTH  = 0x0004,		// others have read permission 
-		S_IWOTH  = 0x0002,		// others have write permisson 
-		S_IXOTH  = 0x0001		// others have execute permission 
-	}
-
+		
     [Flags]
     public enum uv_tcp_flags : uint
     {

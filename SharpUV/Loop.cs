@@ -35,6 +35,9 @@ namespace SharpUV
         internal readonly LoopAllocs Allocs = new LoopAllocs();
         internal readonly List<LoopWork> Works = new List<LoopWork>();
 
+		private BufferCollection _buffers;
+		private RequestCollection _requests;
+
 		public Loop()
 			: this(Uvi.uv_loop_new())
 		{
@@ -56,7 +59,7 @@ namespace SharpUV
 		/// </summary>
 		public void Run()
 		{
-			CheckError(Uvi.uv_run(this.Handle));
+			CheckError(Uvi.uv_run(this.Handle, Uvi.uv_run_mode.UV_RUN_DEFAULT));
 		}
 
 		/// <summary>
@@ -64,18 +67,13 @@ namespace SharpUV
 		/// </summary>
 		public void RunOnce()
 		{
-			CheckError(Uvi.uv_run_once(this.Handle));
+			CheckError(Uvi.uv_run(this.Handle, Uvi.uv_run_mode.UV_RUN_ONCE));
 		}
 
 		public void CheckError(int code)
 		{
-			if (code != 0)
-				throw new UvException(this.GetLastError());
-		}
-
-		public Error GetLastError()
-		{
-			return new Error(Uvi.uv_last_error(this.Handle));
+			if (code < 0)
+				throw new UvException(code);
 		}
 
 		public IntPtr Handle { get; private set; }
@@ -139,6 +137,16 @@ namespace SharpUV
         {
             this.Allocs.DumpAllocs();
         }
+
+		internal BufferCollection Buffers
+		{
+			get { return _buffers ?? (_buffers = new BufferCollection(this)); }
+		}
+
+		internal RequestCollection Requests
+		{
+			get { return _requests ?? (_requests = new RequestCollection(this, this.Buffers)); }
+		}
     }
 
     internal class LoopAllocs

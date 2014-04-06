@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.InteropServices;
 using Libuv;
 using uv_file = System.Int32;
 
@@ -35,24 +36,85 @@ namespace SharpUV
 		Closed
 	}
 
-	public abstract class FileHandle : IDisposable
+	public enum FileAccessMode
 	{
-	    private const int DefaultReadBufferSize = 1024*32;
+		ReadOnly  = 0x0000,  /* open for reading only */
+		WriteOnly = 0x0001,  /* open for writing only */
+		ReadWrite = 0x0002 /* open for reading and writing */
+	}
 
+	[Flags]
+	public enum FileOpenMode
+	{
+		Default 	 = 0x0000,
+		Append 		 = 0x0008,  /* writes done at eof */
+		Create 		 = 0x0100,  /* create and open file */
+		Truncate 	 = 0x0200,  /* open and truncate */
+		OnlyIfExists = 0x0400,  /* open only if file doesn't already exist */
+		TextMode 	 = 0x4000,  /* file mode is text (translated) */
+		BinaryMode 	 = 0x8000  /* file mode is binary (untranslated) */
+	}
+
+	[Flags]
+	public enum FilePermissions
+	{
+		S_IRWXU  = 0x0700,		// user (file owner) has read, write and execute permission 
+		S_IRUSR  = 0x0400,		// user has read permission 
+		S_IREAD  = 0x0400,
+		S_IWUSR  = 0x0200,		// user has write permission 
+		S_IWRITE = 0x0200,
+		S_IXUSR  = 0x0100,		// user has execute permission
+		S_IEXEC  = 0x0100,
+
+		S_IRWXG  = 0x0070,		// group has read, write and execute permission     
+		S_IRGRP  = 0x0040,		// group has read permission 
+		S_IWGRP  = 0x0020,		// group has write permission
+		S_IXGRP  = 0x0010,		// group has execute permission 
+
+		S_IRWXO  = 0x0007,		// others have read, write and execute permission 
+		S_IROTH  = 0x0004,		// others have read permission 
+		S_IWOTH  = 0x0002,		// others have write permisson 
+		S_IXOTH  = 0x0001		// others have execute permission 
+	}
+
+	public class FileHandle : IDisposable
+	{
 		public event EventHandler Closed;
 
 		private FileHandleStatus _status;
+		private int _file = 0;
 
-		protected FileHandle(Loop loop)
+		public FileHandle()
+			: this(Loop.Default)
+		{
+		}
+
+		public FileHandle(Loop loop)
 		{
 			this.Loop = loop;
 			this.Status = FileHandleStatus.Closed;
+			this.InitDelegates();
 		}
 
 		~FileHandle()
 		{
 			this.Close();
 		}
+
+		#region Delegates
+		private uv_fs_cb _openDelegate;
+		private uv_fs_cb _closeDelegate;
+		private uv_fs_cb _readDelegate;
+		private uv_fs_cb _writeDelegate;
+
+		private void InitDelegates ()
+		{
+			_openDelegate = new uv_fs_cb(this.OnOpen);
+			_closeDelegate = new uv_fs_cb(this.OnClose);
+			_readDelegate = new uv_fs_cb(this.OnRead);
+			_writeDelegate = new uv_fs_cb(this.OnWrite);
+		}
+		#endregion
 
 		/// <summary>
 		/// The Loop wherein this object is running
@@ -62,7 +124,7 @@ namespace SharpUV
 		/// <summary>
 		/// Handle status
 		/// </summary>
-		internal FileHandleStatus Status
+		public FileHandleStatus Status
 		{
 			get { return _status; }
 			private set
@@ -72,7 +134,6 @@ namespace SharpUV
 				switch(value)
 				{
 					case FileHandleStatus.Open:
-						this.ReadBuffer = this.Alloc(DefaultReadBufferSize);
 						GC.ReRegisterForFinalize(this);
 						break;
 
@@ -82,40 +143,41 @@ namespace SharpUV
 						break;
 
 					case FileHandleStatus.Closed:
-						this.ReadBuffer = this.Free(this.ReadBuffer);
 						GC.SuppressFinalize(this);
 						break;
 				}
 			}
 		}
 
-		/// <summary>
-		/// File handle
-		/// </summary>
-		internal uv_file File { get; private set; }
+		public void Open(string path)
+		{
+			this.Open(path, FileAccessMode.ReadOnly, FileOpenMode.OnlyIfExists | FileOpenMode.BinaryMode, 0);
+		}
 
-		/// <summary>
-		/// Read buffer
-		/// </summary>
-		internal IntPtr ReadBuffer { get; private set; }
-
-		public void Open(string path, FileAccessMode rw, FileOpenMode open, FilePermissions permissions)
+		public void Open(string path, FileAccessMode access, FileOpenMode mode, FilePermissions permissions)
 		{
 			if (this.Status != FileHandleStatus.Closed)
 				return;
 
-			var req = this.CreateRequest();
+			IntPtr req = IntPtr.Zero;
 
 			try
 			{
-				CheckError(Uvi.uv_fs_open(this.Loop.Handle, req, path, rw, open, permissions, this.OnOpen));
+				req = this.CreateRequest();
+				CheckError(uv_fs_open(this.Loop, req, path, access, mode, permissions, _openDelegate));
 				this.Status = FileHandleStatus.Opening;
 			}
 			catch (Exception)
 			{
-				this.FreeRequest(req, false);
+				this.FreeRequest(req);
 				throw;
 			}
+		}
+
+		private static int uv_fs_open(Loop loop, IntPtr req, string path, FileAccessMode rw, FileOpenMode open, FilePermissions permissions, uv_fs_cb cb)
+		{
+			int p = (int)permissions;
+			return Uvi.uv_fs_open(loop.Handle, req, path, (int)rw | (int)open, 0x0777, cb);
 		}
 
 		/// <summary>
@@ -126,35 +188,37 @@ namespace SharpUV
 			if (this.Status != FileHandleStatus.Open)
 				return;
 
-			var req = this.CreateRequest();
+			IntPtr req = IntPtr.Zero;
 
 			try
 			{
-				CheckError(Uvi.uv_fs_close(this.Loop.Handle, req, this.File, this.OnClose));
+				req = this.CreateRequest();
+				CheckError(Uvi.uv_fs_close(this.Loop.Handle, req, _file, _closeDelegate));
 				this.Status = FileHandleStatus.Closing;
 			}
 			catch (Exception)
 			{
-				this.FreeRequest(req, false);
+				this.FreeRequest(req);
 				throw;
 			}
 		}
 
 		private void OnOpen(IntPtr req)
 		{
-			this.File = this.FreeRequest(req);
-			this.Status = this.File > 0 ? FileHandleStatus.Open : FileHandleStatus.Closed;
-			this.OnOpen();
+			_file = this.FreeRequest(req);
+			this.Status = _file != -1 ? FileHandleStatus.Open : FileHandleStatus.Closed;
+			this.OnOpen(new UvArgs(_file));
 		}
 
-		protected virtual void OnOpen()
+		protected virtual void OnOpen(UvArgs args)
 		{
 		}
 
 		private void OnClose(IntPtr req)
 		{
-			this.File = this.FreeRequest(req);
-			this.Status = FileHandleStatus.Closed;
+			_file = this.FreeRequest(req);
+			if(_file != -1)
+				this.Status = FileHandleStatus.Closed;
 			this.OnClose();
 		}
 
@@ -165,24 +229,29 @@ namespace SharpUV
 				this.Closed(this, EventArgs.Empty);
 		}
 
+		public void Read(byte[] data)
+		{
+			this.Read (data, 0, data.Length);
+		}
+
 		/// <summary>
-		/// Closes the stream. After this call the stream will not be valid
+		/// Read from the file
 		/// </summary>
-		public void Read()
+		public void Read(byte[] data, int offset, int length)
 		{
 			if (this.Status != FileHandleStatus.Open)
 				throw new InvalidOperationException("File handle must be open in order to read data");
 
-			var req = this.CreateRequest();
+			IntPtr req = IntPtr.Zero;
 
 			try
 			{
-				CheckError(Uvi.uv_fs_read(this.Loop.Handle, req, this.File, this.ReadBuffer, DefaultReadBufferSize, -1, this.OnRead));
-				this.Status = FileHandleStatus.Closing;
+				req = this.CreateRequest(data, offset, length);
+				CheckError(Uvi.uv_fs_read(this.Loop.Handle, req, _file, new[] { this.Loop.Requests[req] }, 1, -1, _readDelegate));
 			}
 			catch (Exception)
 			{
-				this.FreeRequest(req, false);
+				this.FreeRequest(req);
 				throw;
 			}
 		}
@@ -190,10 +259,44 @@ namespace SharpUV
 		private void OnRead(IntPtr req)
 		{
 			var ret = this.FreeRequest(req);
-			this.OnRead();
+			this.OnRead(new UvArgs(ret));
 		}
 
-		protected virtual void OnRead()
+		protected virtual void OnRead(UvArgs args)
+		{
+		}
+
+		public void Write(byte[] data)
+		{
+			this.Write (data, 0, data.Length);
+		}
+
+		public void Write(byte[] data, int offset, int length)
+		{
+			if (this.Status != FileHandleStatus.Open)
+				throw new InvalidOperationException("File handle must be open in order to write data");
+
+			IntPtr req = IntPtr.Zero;
+
+			try
+			{
+				req = this.CreateRequest(data, offset, length);
+				CheckError(Uvi.uv_fs_write(this.Loop.Handle, req, _file, new[] { this.Loop.Requests[req] }, 1, -1, _writeDelegate));
+			}
+			catch (Exception)
+			{
+				this.FreeRequest(req);
+				throw;
+			}
+		}
+
+		private void OnWrite(IntPtr req)
+		{
+			var ret = this.FreeRequest(req);
+			this.OnWrite(new UvArgs(ret));
+		}
+
+		protected virtual void OnWrite(UvArgs args)
 		{
 		}
 
@@ -202,26 +305,26 @@ namespace SharpUV
 			this.Loop.CheckError(code);
 		}
 
-		internal IntPtr Alloc(int size)
-		{
-			return this.Loop.Allocs.Alloc(size);
-		}
-
-		internal IntPtr Free(IntPtr ptr)
-		{
-            return this.Loop.Allocs.Free(ptr);
-		}
-
 		internal IntPtr CreateRequest()
 		{
-			return this.Alloc(Uvi.uv_req_size(uv_req_type.UV_FS));
+			return this.Loop.Requests.Create(uv_req_type.UV_FS);
 		}
 
-		internal uv_file FreeRequest(IntPtr req, bool cleanup = true)
+		internal IntPtr CreateRequest(byte[] data, int offset, int length)
 		{
+			return this.Loop.Requests.Create(uv_req_type.UV_FS, data, offset, length);
+		}
+
+		internal uv_file FreeRequest(IntPtr req)
+		{
+			if (req == IntPtr.Zero)
+				return 0;
+
 			var ret = Uvi.uv_fs_req_result(req);
-			if(cleanup)
-				Uvi.uv_fs_req_cleanup(req);
+			Uvi.uv_fs_req_cleanup(req);
+			this.Loop.Requests.Delete(req);
+			if (ret < 0)
+				throw new UvException(ret);
 
 			return ret;
 		}

@@ -33,7 +33,7 @@ namespace SharpUV
 	{
 		public const int DefaultBackLog = 128;
 
-		private readonly List<TcpServerSocket> _clients = new List<TcpServerSocket>();
+		private readonly HashSet<TcpServerSocket> _clients = new HashSet<TcpServerSocket>();
 	    private IntPtr _address = IntPtr.Zero;
 
 		public TcpServer()
@@ -61,7 +61,10 @@ namespace SharpUV
 
 		public int BackLog { get; set; }
 
-		public int ConnectedClients { get { return _clients.Count; } }
+		public IEnumerable<TcpServerSocket> Clients
+		{
+			get { return _clients; }
+		}
 
 		public void StartListening(IPEndPoint endpoint)
 		{
@@ -70,6 +73,7 @@ namespace SharpUV
 		        _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
                 CheckError(Uvi.uv_tcp_bind(this.Handle, _address, 0));
                 CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
+				this.Status = HandleStatus.Open;
 		    }
 		    catch (Exception)
 		    {

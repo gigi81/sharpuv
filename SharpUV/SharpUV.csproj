@@ -47,7 +47,6 @@
     <Compile Include="BufferCollection.cs" />
     <Compile Include="BufferManager.cs" />
     <Compile Include="FileHandle.cs" />
-    <Compile Include="FileStream.cs" />
     <Compile Include="Libuv\OffT.cs" />
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Error.cs" />
@@ -61,6 +60,7 @@
     <Compile Include="UvStream.cs" />
     <Compile Include="TcpServer.cs" />
     <Compile Include="TcpSocket.cs" />
+    <Compile Include="UvArgs.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

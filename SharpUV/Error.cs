@@ -22,38 +22,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.InteropServices;
 using Libuv;
 
 namespace SharpUV
 {
-	public class Error
-	{
-		private uv_err_t _error;
-
-		internal Error(uv_err_t error)
-		{
-			_error = error;
-		}
-
-		public int ErrorCode
-		{
-			get { return (int)_error.code; }
-		}
-
-		public string ErrorDescription
-		{
-			get { return Uvi.uv_strerror(_error); }
-		}
-	}
-
 	public class UvException : Exception
 	{
-		public UvException(Error error)
-			: base(error.ErrorDescription)
-		{
-			this.Error = error;
-		}
+		private int _error;
+		private string _message;
 
-		public Error Error { get; protected set; }
+		public UvException(int error)
+		{
+			_error = error;
+			_message = Marshal.PtrToStringAnsi(Uvi.uv_strerror (error));
+		}
 	}
 }

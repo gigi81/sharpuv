@@ -28,9 +28,6 @@ namespace SharpUV
 {
 	public class UvStream : UvHandle
 	{
-	    private BufferCollection _buffers;
-	    private RequestCollection _requests;
-
 		/// <summary>
 		/// 
 		/// </summary>
@@ -87,21 +84,11 @@ namespace SharpUV
 
 		public bool IsReading { get; private set; }
 
-	    private BufferCollection Buffers
-	    {
-            get { return _buffers ?? (_buffers = new BufferCollection(this.Loop)); }
-	    }
-
-        private RequestCollection Requests
-        {
-            get { return _requests ?? (_requests = new RequestCollection(this.Loop, this.Buffers)); }
-        }
-
 		private void OnAlloc(IntPtr tcp, SizeT size, IntPtr buf)
 		{
 			try
 			{
-                this.Buffers.AllocBuffer(buf, (uint)size.Value);
+                this.Loop.Buffers.AllocBuffer(buf, (uint)size.Value);
 			}
 			catch (Exception ex)
 			{
@@ -112,7 +99,7 @@ namespace SharpUV
         private void OnRead(IntPtr stream, SSizeT nread, IntPtr buf)
 		{
             if (nread.Value > 0)
-                this.OnRead(this.Buffers.CopyAndDeleteBuffer(buf, (int)nread.Value));
+				this.OnRead(this.Loop.Buffers.CopyAndDeleteBuffer(buf, (int)nread.Value));
 
             if (nread.Value < 0)
 				this.Close();
@@ -135,29 +122,26 @@ namespace SharpUV
 
 		public void Write(byte[] data, int offset, int length)
 		{
-			IntPtr requestHandle = IntPtr.Zero;
+			IntPtr req = IntPtr.Zero;
 
 			try
 			{
-                requestHandle = this.Requests.Create(uv_req_type.UV_WRITE, data, offset, length);
-                CheckError((Uvi.uv_write(requestHandle, this.Handle, new[] { this.Requests[requestHandle] }, 1, _writeDelegate)));
+				req = this.Loop.Requests.Create(uv_req_type.UV_WRITE, data, offset, length);
+				CheckError((Uvi.uv_write(req, this.Handle, new[] { this.Loop.Requests[req] }, 1, _writeDelegate)));
 			}
 			catch (Exception)
 			{
-				if(requestHandle != IntPtr.Zero)
-                    this.Requests.Delete(requestHandle);
-
+				this.Loop.Requests.Delete(req);
 				throw;
 			}
 		}
 
 		private void OnWrite(IntPtr requestHandle, int status)
 		{
-            this.Requests.Delete(requestHandle);
+			this.Loop.Requests.Delete(requestHandle);
 
-			if (status != 0)
-			{
-				var error = this.Loop.GetLastError();
+			if (status != 0) {
+				var ex = new UvException (status);
 			}
 
 			this.OnWrite();
@@ -187,7 +171,7 @@ namespace SharpUV
 
 			if (status != 0)
 			{
-				var error = this.Loop.GetLastError();
+				var ex = new UvException(status);
 			}
 
 			this.OnShutdown();

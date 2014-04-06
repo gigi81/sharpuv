@@ -36,6 +36,13 @@ namespace Libuv
 
         internal const int sockaddr_in6_size = 28;
 
+		internal enum uv_run_mode : int
+		{
+			UV_RUN_DEFAULT = 0,
+			UV_RUN_ONCE,
+			UV_RUN_NOWAIT
+		};
+
 		#region Loop functions
 
         [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
@@ -45,13 +52,9 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern IntPtr uv_default_loop(); // uv_loop_t*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_run(IntPtr loop); // uv_loop_t*
+		internal static extern int uv_run(IntPtr loop, uv_run_mode uv_run_mode); // uv_loop_t*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_run_once(IntPtr loop); //uv_loop_t*
-		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern uv_err_t uv_last_error(IntPtr loop); // uv_loop_t*
-		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern string uv_strerror(uv_err_t err);
+		internal static extern IntPtr uv_strerror(int err);
 
 		#endregion
 
@@ -177,11 +180,6 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_open(IntPtr loop, IntPtr req, string path, int flags, int mode, uv_fs_cb cb);
 
-		internal static int uv_fs_open(IntPtr loop, IntPtr req, string path, FileAccessMode rw, FileOpenMode open, FilePermissions permissions, uv_fs_cb cb)
-		{
-			return uv_fs_open(loop, req, path, (int)rw | (int)open, (int)permissions, cb);
-		}
-
 		/// <summary>
 		/// 
 		/// </summary>
@@ -209,9 +207,8 @@ namespace Libuv
 			IntPtr loop,
 			IntPtr req,
 			uv_file file,
-			IntPtr buf,
-			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SizeTMarshaler")]
-			SizeT length,
+			uv_buf_t[] bufs,
+			int nbufs,
 			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.OffTMarshaler")]
 			OffT offset,
 			uv_fs_cb cb
@@ -233,11 +230,9 @@ namespace Libuv
 			IntPtr loop,
 			IntPtr req,
 			uv_file file,
-			IntPtr buf,
-			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SizeTMarshaler")]
-			SizeT length,
-			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.OffTMarshaler")]
-			OffT offset,
+			uv_buf_t[] bufs,
+			int nbufs,
+			long offset,
 			uv_fs_cb cb
 		);
 

@@ -77,10 +77,19 @@ namespace SharpUV
             _buffer = buffer;
         }
 
-        internal IntPtr Create(uv_req_type reqType, byte[] data, int offset, int length)
+		internal IntPtr Create(uv_req_type reqType)
+		{
+			return this.Create(reqType, BufferCollection.EmptyBuffer);
+		}
+
+		internal IntPtr Create(uv_req_type reqType, byte[] data, int offset, int length)
+		{
+			return Create(reqType, _buffer.CreateBuffer(data, offset, length));
+		}
+
+		internal IntPtr Create(uv_req_type reqType, uv_buf_t buffer)
         {
             var requestHandle = _loop.Allocs.Alloc(Uvi.uv_req_size(reqType));
-            var buffer = _buffer.CreateBuffer(data, offset, length);
 
             uv_req_t request = new uv_req_t()
             {
@@ -96,6 +105,9 @@ namespace SharpUV
 
         internal void Delete(IntPtr requestHandle)
         {
+			if (requestHandle == IntPtr.Zero)
+				return;
+
             _buffer.DeleteBuffer(_writes[requestHandle]);
             _loop.Allocs.Free(requestHandle);
             _writes.Remove(requestHandle);

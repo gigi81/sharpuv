@@ -17,18 +17,31 @@ namespace SharpUV.Test
 
 		static void Main(string[] args)
 		{
-            //create the server
+			//TestServer ();
+			TestFile ();
+			Console.ReadKey();
+		}
+
+		static void TestFile()
+		{
+			var test = new FileTests();
+			test.Open ();
+		}
+
+		static void TestServer()
+		{
+			//create the server
 			server = new TcpEchoServer();
 			server.StartListening(ServerEndPoint);
 
-            //create a pool of clients
+			//create a pool of clients
 			var pool = new EchoClientsPool(100, 32 * 1024, 64);
-            //set to false to check data transferred (slow down transfer rate)
-		    pool.SkipCheck = false;
+			//set to false to check data transferred (slow down transfer rate)
+			pool.SkipCheck = false;
 			pool.Completed += pool_Completed;
 			pool.Start();
 
-            //start the server and 
+			//start the server and 
 			var stopWatch = new Stopwatch();
 			stopWatch.Start();
 			server.Loop.Run();
@@ -39,24 +52,23 @@ namespace SharpUV.Test
 
 			var total = pool.TotalBytes;
 
-		    server.Dispose();
-		    pool.Dispose();
+			server.Dispose();
+			pool.Dispose();
 
-            Loop.Default.Run();
+			Loop.Default.Run();
 
 			GC.Collect();
 
-            //seems like the garbage collector is 
-            Thread.Sleep(2000);
+			//seems like the garbage collector is 
+			Thread.Sleep(2000);
 
 			Console.WriteLine("Memory report: allocated {0}, deallocated {1}", Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
 			Console.WriteLine("Handles not deallocated: {0}", UvHandle.CurrentlyAllocatedHandles);
-            Console.WriteLine("Pending loop works: {0}", Loop.Default.PendingWorks);
+			Console.WriteLine("Pending loop works: {0}", Loop.Default.PendingWorks);
 			Console.WriteLine("Transferred data {0} MB", total / (1024 * 1024));
 			Console.WriteLine("Total time {0} seconds", stopWatch.Elapsed.TotalSeconds);
 			Console.WriteLine("Performance: {0} MB/s", (int)(total / stopWatch.Elapsed.TotalSeconds / (1024 * 1024)));
-            Console.WriteLine("Press any key to exit...");
-			Console.ReadKey();
+			Console.WriteLine("Press any key to exit...");
 		}
 
 		static void pool_Completed(object sender, EventArgs e)

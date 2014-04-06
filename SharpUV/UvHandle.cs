@@ -66,7 +66,7 @@ namespace SharpUV
 		private UvHandle(Loop loop)
 		{
 			this.Loop = loop;
-			this.HandleStatus = HandleStatus.Open;
+			this.Status = HandleStatus.Closed;
 			this.InitDelegates();
 
 			UvHandle.CurrentlyAllocatedHandles++;
@@ -100,24 +100,24 @@ namespace SharpUV
 		/// <summary>
 		/// Handle status
 		/// </summary>
-		internal HandleStatus HandleStatus { get; private set; }
+		public HandleStatus Status { get; protected set; }
 
 		/// <summary>
 		/// Closes the stream
 		/// </summary>
 		public void Close(bool dispose = false)
 		{
-			if (this.HandleStatus != HandleStatus.Open)
+			if (this.Status != HandleStatus.Open)
 				return;
 
 			this.DisposeAfterClose = dispose;
 			Uvi.uv_close(this.Handle, _closeDelegate);
-			this.HandleStatus = HandleStatus.Closing;
+			this.Status = HandleStatus.Closing;
 		}
 
 		private void OnClose(IntPtr handle)
 		{
-			this.HandleStatus = HandleStatus.Closed;
+			this.Status = HandleStatus.Closed;
 			this.OnClose();
 			if (this.DisposeAfterClose)
 				this.Dispose(true);
@@ -165,7 +165,7 @@ namespace SharpUV
 		/// </summary>
 		public void Dispose()
 		{
-			if (this.HandleStatus != HandleStatus.Closed)
+			if (this.Status != HandleStatus.Closed)
 				this.Close(true); //will later call the dispose
 			else
 				this.Dispose(true);

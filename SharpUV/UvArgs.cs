@@ -35,5 +35,21 @@ namespace SharpUV
 				throw _exception;
 		}
 	}
+
+	public class UvDataArgs : UvArgs
+	{
+		private byte[] _data;
+
+		public UvDataArgs (int error, byte[] data)
+			: base(error)
+		{
+			_data = data;
+		}
+
+		public byte[] Data
+		{
+			get { return _data; }
+		}
+	}
 }
 

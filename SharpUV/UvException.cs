@@ -37,5 +37,11 @@ namespace SharpUV
 			_error = error;
 			_message = Marshal.PtrToStringAnsi(Uvi.uv_strerror (error));
 		}
+
+		public override string Message {
+			get {
+				return _message;
+			}
+		}
 	}
 }

@@ -9,21 +9,20 @@ namespace SharpUV.NUnit
 	[TestFixture]
 	public class FileTests
 	{
-		private static bool done = false;
+		private static string TestFilePath
+		{
+			get{ return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test.txt"); }
+		}
 
 		[Test]
 		public void Open()
 		{
 			var handle = new WriteFileHandle();
-			var path = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "test.txt");
+			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
-			handle.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.BinaryMode, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+			Loop.Default.Run ();
 
-			while (!done) {
-				Loop.Default.RunOnce();
-			}
-
-			Assert.AreEqual(System.IO.File.ReadAllText(path), "test");
+			Assert.AreEqual(System.IO.File.ReadAllText(TestFilePath), "test");
 		}
 
 		internal class WriteFileHandle : FileHandle
@@ -34,14 +33,15 @@ namespace SharpUV.NUnit
 				this.Write(Encoding.UTF8.GetBytes("test"));
 			}
 
-			protected override void OnWrite(UvArgs args)
+			protected override void OnWrite(UvDataArgs args)
 			{
+				args.Throw ();
 				this.Close();
 			}
 
-			protected override void OnClose ()
+			protected override void OnClose (UvArgs args)
 			{
-				done = true;
+				args.Throw ();
 			}
 		}
 	}

@@ -49,7 +49,6 @@
     <Compile Include="FileHandle.cs" />
     <Compile Include="Libuv\OffT.cs" />
     <Compile Include="Libuv\SizeT.cs" />
-    <Compile Include="Error.cs" />
     <Compile Include="Libuv\Imports.cs" />
     <Compile Include="Libuv\SSizeT.cs" />
     <Compile Include="Loop.cs" />
@@ -61,6 +60,8 @@
     <Compile Include="TcpServer.cs" />
     <Compile Include="TcpSocket.cs" />
     <Compile Include="UvArgs.cs" />
+    <Compile Include="UvException.cs" />
+    <Compile Include="UvCallback.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -90,8 +90,7 @@ namespace SharpUV
 
 		private void OnClientClosed(object sender, EventArgs e)
 		{
-			var client = (TcpServerSocket) sender;
-			_clients.Remove(client);
+            _clients.Remove(sender as TcpServerSocket);
 		}
 
 		protected virtual TcpServerSocket CreateClientSocket()
@@ -99,7 +98,7 @@ namespace SharpUV
 			return new TcpServerSocket(this);
 		}
 
-		protected override void OnClose()
+		protected override void OnClose(UvArgs args)
 		{
 			foreach (var client in _clients)
 			{
@@ -113,7 +112,6 @@ namespace SharpUV
 				}
 			}
 
-			base.OnClose();
             _address = Free(_address);
 		}
 	}

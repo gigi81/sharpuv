@@ -25,15 +25,10 @@ using Libuv;
 
 namespace SharpUV
 {
-	public enum TcpClientSocketStatus
-	{
-		Disconnected = 0,
-		Connecting = 1,
-		Connected
-	}
-
 	public class TcpClientSocket : TcpSocket
 	{
+        public EventHandler<UvArgs> Connected;
+
 	    private IntPtr _address;
 
 		public TcpClientSocket()
@@ -45,7 +40,6 @@ namespace SharpUV
 			: base(loop)
 		{
 			this.Connection = this.Alloc(uv_req_type.UV_CONNECT);
-			this.Status = TcpClientSocketStatus.Disconnected;
 		}
 
 		#region Delegates
@@ -59,37 +53,39 @@ namespace SharpUV
 
 		#endregion
 
-
-		public TcpClientSocketStatus Status { get; private set; }
-
 		/// <summary>
 		/// Connection handle
 		/// </summary>
 		/// <remarks>Handle type is <typeparamref name="Libuv.uv_connect_t"/></remarks>
 		internal IntPtr Connection { get; set; }
 
-		public void Connect(IPEndPoint endpoint)
+        private UvCallback _connectCallback;
+
+        public void Connect(IPEndPoint endpoint, Action<UvArgs> callback = null)
 		{
 		    try
 		    {
                 _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
                 CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
-                this.Status = TcpClientSocketStatus.Connecting;
+                this.Status = HandleStatus.Opening;
+                _connectCallback = new UvCallback(this, callback);
 		    }
-		    catch (Exception ex)
+		    catch (Exception)
 		    {
                 _address = Free(_address);
+                _connectCallback = null;
 		        throw;
 		    }
 		}
 
 		private void OnConnect(IntPtr connection, int status)
 		{
-			this.Status = status == 0 ? TcpClientSocketStatus.Connected : TcpClientSocketStatus.Disconnected;
-			this.OnConnect();
+			this.Status = status == 0 ? HandleStatus.Open : HandleStatus.Closed;
+            _connectCallback.Invoke(status, this.OnConnect, this.Connected);
+            _connectCallback = null;
 		}
 
-		protected virtual void OnConnect()
+		protected virtual void OnConnect(UvArgs args)
 		{
 		}
 
@@ -114,6 +110,7 @@ namespace SharpUV
 		{
 			this.Server = server;
 			this.Accept();
+            this.Status = HandleStatus.Open;
 		}
 
 		private void Accept()

@@ -4,16 +4,18 @@ namespace SharpUV
 {
 	internal abstract class UvCallback<TArgs> where TArgs : UvArgs
 	{
+        private object _parent;
 		protected Action<TArgs> _callback;
 
-		protected UvCallback(Action<TArgs> callback)
+		protected UvCallback(object sender, Action<TArgs> callback)
 		{
 			_callback = callback;
+            _parent = sender;
 		}
 
 		protected abstract TArgs CreateArgs(int code);
 
-		public void Invoke(int code, Action<TArgs> callback)
+		public void Invoke(int code, Action<TArgs> callback, EventHandler<TArgs> handler)
 		{
 			var args = this.CreateArgs(code);
 
@@ -22,13 +24,16 @@ namespace SharpUV
 
 			if(_callback != null)
 				_callback.Invoke (args);
+
+            if (handler != null)
+                handler(_parent, args);
 		}
 	}
 
 	internal class UvCallback : UvCallback<UvArgs>
 	{
-		internal UvCallback(Action<UvArgs> callback)
-			: base(callback)
+		internal UvCallback(object sender, Action<UvArgs> callback)
+			: base(sender, callback)
 		{
 		}
 
@@ -42,8 +47,8 @@ namespace SharpUV
 	{
 		private byte[] _data;
 
-		internal UvDataCallback(Action<UvDataArgs> callback, byte[] data)
-			: base(callback)
+		internal UvDataCallback(object sender, Action<UvDataArgs> callback, byte[] data)
+			: base(sender, callback)
 		{
 			_data = data;
 		}
@@ -52,6 +57,11 @@ namespace SharpUV
 		{
 			return new UvDataArgs (code, _data);
 		}
+
+        public void Invoke(int code, byte[] data, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
+        {
+            _data = data;
+            base.Invoke(code, callback, handler);
+        }
 	}
 }
-

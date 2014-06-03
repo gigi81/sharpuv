@@ -52,20 +52,33 @@ namespace SharpUV.Test
 			}
 		}
 
-		protected override void OnConnect()
+		protected override void OnConnect(UvArgs args)
 		{
-			base.OnConnect();
-			if (this.Status == TcpClientSocketStatus.Connected)
+			if (this.Status == HandleStatus.Open)
 				this.SendPacket();
 			else
 				this.Close();
 		}
 
-		protected override void OnRead(byte[] data)
+		protected override void OnRead(UvDataArgs args)
 		{
-			base.OnRead(data);
-			this.Checker.Received(data);
-            this.Loop.QueueWork(this.RunReceive, this.AfterReceive);
+            if(args.IsSuccesful)
+            {
+                this.Checker.Received(args.Data);
+                if (this.SkipCheck)
+                {
+                    this.RunReceive();
+                    this.AfterReceive();
+                }
+                else
+                {
+                    this.Loop.QueueWork(this.RunReceive, this.AfterReceive);
+                }
+            }
+            else
+            {
+                this.Close();
+            }
 		}
 
 	    private bool _lastCheck = false;
@@ -96,17 +109,10 @@ namespace SharpUV.Test
             }
         }
 
-		protected override void OnWrite()
+		protected override void OnWrite(UvDataArgs args)
 		{
-			base.OnWrite();
-
 			if(!this.IsReading)
 				this.ReadStart();
-		}
-
-		protected override void OnClose()
-		{
-			base.OnClose();
 		}
 
 		private byte[] CreateRandom(int size)

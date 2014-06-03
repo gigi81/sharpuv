@@ -17,8 +17,9 @@ namespace SharpUV.Test
 
 		static void Main(string[] args)
 		{
-			//TestServer ();
-			TestFile ();
+			TestServer ();
+			//TestFile ();
+            Console.WriteLine("Done. Press any key to exit...");
 			Console.ReadKey();
 		}
 
@@ -35,9 +36,9 @@ namespace SharpUV.Test
 			server.StartListening(ServerEndPoint);
 
 			//create a pool of clients
-			var pool = new EchoClientsPool(100, 32 * 1024, 64);
-			//set to false to check data transferred (slow down transfer rate)
-			pool.SkipCheck = false;
+			var pool = new EchoClientsPool(10, 128 * 1024, 1024);
+			//set to true to verify the data transferred (if enabled will slow down transfer rate)
+			pool.SkipCheck = true;
 			pool.Completed += pool_Completed;
 			pool.Start();
 
@@ -68,7 +69,6 @@ namespace SharpUV.Test
 			Console.WriteLine("Transferred data {0} MB", total / (1024 * 1024));
 			Console.WriteLine("Total time {0} seconds", stopWatch.Elapsed.TotalSeconds);
 			Console.WriteLine("Performance: {0} MB/s", (int)(total / stopWatch.Elapsed.TotalSeconds / (1024 * 1024)));
-			Console.WriteLine("Press any key to exit...");
 		}
 
 		static void pool_Completed(object sender, EventArgs e)

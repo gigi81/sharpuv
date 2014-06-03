@@ -31,6 +31,7 @@ namespace SharpUV
 	/// </summary>
 	public enum HandleStatus
 	{
+        Opening,
 		Open,
 		Closing,
 		Closed
@@ -38,7 +39,9 @@ namespace SharpUV
 
 	public abstract class UvHandle : IDisposable
 	{
-		public event EventHandler Closed;
+		public event EventHandler<UvArgs> Closed;
+
+        private UvCallback _closeCallback;
 
 		/// <summary>
 		/// The number of current allocated handles
@@ -105,7 +108,7 @@ namespace SharpUV
 		/// <summary>
 		/// Closes the stream
 		/// </summary>
-		public void Close(bool dispose = false)
+		public void Close(bool dispose = false, Action<UvArgs> callback = null)
 		{
 			if (this.Status != HandleStatus.Open)
 				return;
@@ -113,20 +116,19 @@ namespace SharpUV
 			this.DisposeAfterClose = dispose;
 			Uvi.uv_close(this.Handle, _closeDelegate);
 			this.Status = HandleStatus.Closing;
+            _closeCallback = new UvCallback(this, callback);
 		}
 
 		private void OnClose(IntPtr handle)
 		{
 			this.Status = HandleStatus.Closed;
-			this.OnClose();
+            _closeCallback.Invoke((int)handle, this.OnClose, this.Closed);
 			if (this.DisposeAfterClose)
 				this.Dispose(true);
 		}
 
-		protected virtual void OnClose()
+		protected virtual void OnClose(UvArgs args)
 		{
-			if (this.Closed != null)
-				this.Closed(this, EventArgs.Empty);
 		}
 
 		internal void CheckError(int code)

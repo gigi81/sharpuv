@@ -2,7 +2,7 @@
 
 namespace SharpUV
 {
-	public class UvArgs
+	public class UvArgs : EventArgs
 	{
 		private int _error;
 		private UvException _exception;
@@ -52,4 +52,3 @@ namespace SharpUV
 		}
 	}
 }
-

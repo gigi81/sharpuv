@@ -28,6 +28,16 @@ namespace SharpUV
 {
 	public class UvStream : UvHandle
 	{
+        public event EventHandler<UvDataArgs> OnReadData;
+        public event EventHandler<UvDataArgs> OnWriteData;
+        public event EventHandler<UvArgs> ShuttedDown;
+
+        private bool _isReading = false;
+
+        private UvDataCallback _readCallback;
+        private UvDataCallback _writeCallback;
+        private UvCallback _shutdownCallback;
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -70,19 +80,20 @@ namespace SharpUV
 		}
 		#endregion
 
-		public void ReadStart()
+		public void ReadStart(Action<UvDataArgs> callback = null)
 		{
 			CheckError(Uvi.uv_read_start(this.Handle, _allocDelegate, _readDelegate));
-			this.IsReading = true;
+            _isReading = true;
+            _readCallback = new UvDataCallback(this, callback, null);
 		}
 
 		public void ReadStop()
 		{
 			CheckError(Uvi.uv_read_stop(this.Handle));
-			this.IsReading = false;
+            _isReading = false;
 		}
 
-		public bool IsReading { get; private set; }
+        public bool IsReading { get { return _isReading; } }
 
 		private void OnAlloc(IntPtr tcp, SizeT size, IntPtr buf)
 		{
@@ -96,12 +107,12 @@ namespace SharpUV
 			}
 		}
 
-        private void OnRead(IntPtr stream, SSizeT nread, IntPtr buf)
+        private void OnRead(IntPtr stream, int nread, IntPtr buf)
 		{
-            if (nread.Value > 0)
-				this.OnRead(this.Loop.Buffers.CopyAndDeleteBuffer(buf, (int)nread.Value));
+            var data = this.Loop.Buffers.CopyAndDeleteBuffer(buf, (int)nread);
+            _readCallback.Invoke((int)nread, data, this.OnRead, this.OnReadData);
 
-            if (nread.Value < 0)
+            if (nread < 0)
 				this.Close();
 		}
 
@@ -115,12 +126,12 @@ namespace SharpUV
             get { return Uvi.uv_is_writable(this.Handle) != 0; }
         }
 
-		public void Write(byte[] data)
+        public void Write(byte[] data, Action<UvDataArgs> callback = null)
 		{
 			this.Write(data, 0, data.Length);
 		}
 
-		public void Write(byte[] data, int offset, int length)
+        public void Write(byte[] data, int offset, int length, Action<UvDataArgs> callback = null)
 		{
 			IntPtr req = IntPtr.Zero;
 
@@ -128,6 +139,7 @@ namespace SharpUV
 			{
 				req = this.Loop.Requests.Create(uv_req_type.UV_WRITE, data, offset, length);
 				CheckError((Uvi.uv_write(req, this.Handle, new[] { this.Loop.Requests[req] }, 1, _writeDelegate)));
+                _writeCallback = new UvDataCallback(this, callback, data);
 			}
 			catch (Exception)
 			{
@@ -139,24 +151,20 @@ namespace SharpUV
 		private void OnWrite(IntPtr requestHandle, int status)
 		{
 			this.Loop.Requests.Delete(requestHandle);
-
-			if (status != 0) {
-				var ex = new UvException (status);
-			}
-
-			this.OnWrite();
+            _writeCallback.Invoke(status, this.OnWrite, this.OnWriteData);
 		}
 
-		public void Shutdown()
+		public void Shutdown(Action<UvArgs> callback = null)
 		{
 			IntPtr req = this.Alloc(uv_req_type.UV_SHUTDOWN);
 
 			try
 			{
-				if (this.IsReading)
+				if (_isReading)
 					this.ReadStop();
 
 				CheckError(Uvi.uv_shutdown(req, this.Handle, _shutdownDelegate));
+                _shutdownCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
 			{
@@ -168,25 +176,19 @@ namespace SharpUV
 		private void OnShutdown(IntPtr req, int status)
 		{
             this.Free(req);
-
-			if (status != 0)
-			{
-				var ex = new UvException(status);
-			}
-
-			this.OnShutdown();
+            _shutdownCallback.Invoke(status, this.OnShutdown, this.ShuttedDown);
 			this.Close();
 		}
 
-		protected virtual void OnRead(byte[] data)
+		protected virtual void OnRead(UvDataArgs args)
 		{
 		}
 
-		protected virtual void OnWrite()
+        protected virtual void OnWrite(UvDataArgs args)
 		{
 		}
 
-		protected virtual void OnShutdown()
+		protected virtual void OnShutdown(UvArgs args)
 		{
 		}
 	}

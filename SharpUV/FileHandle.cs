@@ -82,7 +82,10 @@ namespace SharpUV
 
 	public class FileHandle : IDisposable
 	{
-		public event EventHandler Closed;
+        public event EventHandler<UvArgs> Opened;
+		public event EventHandler<UvArgs> Closed;
+        public event EventHandler<UvDataArgs> OnReadData;
+        public event EventHandler<UvDataArgs> OnWriteData;
 
 		private FileHandleStatus _status;
 		private int _file = 0;
@@ -154,10 +157,15 @@ namespace SharpUV
 
 		private UvCallback _openCallback;
 
-		public void Open(string path, Action<UvArgs> callback = null)
+		public void OpenRead(string path, Action<UvArgs> callback = null)
 		{
 			this.Open(path, FileAccessMode.ReadOnly, FileOpenMode.OnlyIfExists | FileOpenMode.BinaryMode, 0, callback);
 		}
+
+        public void OpenWrite(string path, Action<UvArgs> callback = null)
+        {
+            this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Truncate | FileOpenMode.BinaryMode, 0, callback);
+        }
 
 		public void Open(string path, FileAccessMode access, FileOpenMode mode, FilePermissions permissions, Action<UvArgs> callback = null)
 		{
@@ -168,14 +176,13 @@ namespace SharpUV
 
 			try
 			{
-				_openCallback = new UvCallback(callback);
 				req = this.CreateRequest();
 				CheckError(uv_fs_open(this.Loop, req, path, access, mode, permissions, _openDelegate));
 				this.Status = FileHandleStatus.Opening;
+                _openCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
 			{
-				_openCallback = null;
 				this.FreeRequest(req);
 				throw;
 			}
@@ -190,7 +197,7 @@ namespace SharpUV
 		{
 			_file = this.FreeRequest(req);
 			this.Status = _file != -1 ? FileHandleStatus.Open : FileHandleStatus.Closed;
-			_openCallback.Invoke(_file, this.OnOpen);
+			_openCallback.Invoke(_file, this.OnOpen, this.Opened);
 			_openCallback = null;
 		}
 
@@ -212,14 +219,13 @@ namespace SharpUV
 
 			try
 			{
-				_closeCallback = new UvCallback(callback);
 				req = this.CreateRequest();
 				CheckError(Uvi.uv_fs_close(this.Loop.Handle, req, _file, _closeDelegate));
 				this.Status = FileHandleStatus.Closing;
+                _closeCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
 			{
-				_closeCallback = null;
 				this.FreeRequest(req);
 				throw;
 			}
@@ -230,12 +236,10 @@ namespace SharpUV
 			_file = this.FreeRequest(req);
 			if(_file != -1)
 				this.Status = FileHandleStatus.Closed;
-			_closeCallback.Invoke(_file, this.OnClose);
+			_closeCallback.Invoke(_file, this.OnClose, this.Closed);
 			_closeCallback = null;
 
 			this.Dispose(false);
-			if (this.Closed != null)
-				this.Closed(this, EventArgs.Empty);
 		}
 
 		protected virtual void OnClose(UvArgs args)
@@ -261,13 +265,12 @@ namespace SharpUV
 
 			try
 			{
-				_readCallback = new UvDataCallback(callback, data);
 				req = this.CreateRequest(data, offset, length);
 				CheckError(Uvi.uv_fs_read(this.Loop.Handle, req, _file, new[] { this.Loop.Requests[req] }, 1, -1, _readDelegate));
+                _readCallback = new UvDataCallback(this, callback, data);
 			}
 			catch (Exception)
 			{
-				_readCallback = null;
 				this.FreeRequest(req);
 				throw;
 			}
@@ -275,7 +278,7 @@ namespace SharpUV
 
 		private void OnRead(IntPtr req)
 		{
-			_readCallback.Invoke(this.FreeRequest(req), this.OnRead);
+			_readCallback.Invoke(this.FreeRequest(req), this.OnRead, this.OnReadData);
 			_readCallback = null;
 		}
 
@@ -299,13 +302,12 @@ namespace SharpUV
 
 			try
 			{
-				_writeCallback = new UvDataCallback(callback, data);
 				req = this.CreateRequest(data, offset, length);
 				CheckError(Uvi.uv_fs_write(this.Loop.Handle, req, _file, new[] { this.Loop.Requests[req] }, 1, -1, _writeDelegate));
+                _writeCallback = new UvDataCallback(this, callback, data);
 			}
 			catch (Exception)
 			{
-				_writeCallback = null;
 				this.FreeRequest(req);
 				throw;
 			}
@@ -313,7 +315,7 @@ namespace SharpUV
 
 		private void OnWrite(IntPtr req)
 		{
-			_writeCallback.Invoke(this.FreeRequest(req), this.OnWrite);
+			_writeCallback.Invoke(this.FreeRequest(req), this.OnWrite, this.OnWriteData);
 			_writeCallback = null;
 		}
 

@@ -21,9 +21,10 @@ namespace SharpUV.Test
 				Console.WriteLine("Client connected");
 			}
 
-			protected override void OnRead(byte[] data)
+			protected override void OnRead(UvDataArgs args)
 			{
-				this.Write(data);
+                if(args.Code > 0)
+    				    this.Write(args.Data, 0, args.Data.Length);
 				//this.ProcessCommand(Encoding.UTF8.GetString(data));
 			}
 
@@ -38,9 +39,8 @@ namespace SharpUV.Test
 					this.Server.Close();
 			}
 
-			protected override void OnClose()
+			protected override void OnClose(UvArgs args)
 			{
-				base.OnClose();
 				Console.WriteLine("Client disconnected");
 			}
 		}

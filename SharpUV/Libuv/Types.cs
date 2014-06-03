@@ -187,8 +187,7 @@ namespace Libuv
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void uv_read_cb(
                 IntPtr req,
-                [MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SSizeTMarshaler")]
-                SSizeT nread,
+                int nread,
                 IntPtr buf
     ); //buf = uv_buf_t
 

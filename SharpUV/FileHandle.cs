@@ -86,6 +86,8 @@ namespace SharpUV
 		public event EventHandler<UvArgs> Closed;
         public event EventHandler<UvDataArgs> OnReadData;
         public event EventHandler<UvDataArgs> OnWriteData;
+        public event EventHandler<UvArgs> DirectoryCreated;
+        public event EventHandler<UvArgs> DirectoryRemoved;
 
 		private FileHandleStatus _status;
 		private int _file = 0;
@@ -112,6 +114,8 @@ namespace SharpUV
 		private uv_fs_cb _closeDelegate;
 		private uv_fs_cb _readDelegate;
 		private uv_fs_cb _writeDelegate;
+        private uv_fs_cb _mkdirDelegate;
+        private uv_fs_cb _rmdirDelegate;
 
 		private void InitDelegates ()
 		{
@@ -119,6 +123,8 @@ namespace SharpUV
 			_closeDelegate = new uv_fs_cb(this.OnClose);
 			_readDelegate = new uv_fs_cb(this.OnRead);
 			_writeDelegate = new uv_fs_cb(this.OnWrite);
+            _mkdirDelegate = new uv_fs_cb(this.OnCreateDirectory);
+            _rmdirDelegate = new uv_fs_cb(this.OnRemoveDirectory);
 		}
 		#endregion
 
@@ -351,6 +357,70 @@ namespace SharpUV
 
 			return ret;
 		}
+
+        private UvCallback _mkdirCallback;
+
+        public void CreateDirectory(string path, Action<UvArgs> callback = null)
+        {
+            this.CreateDirectory(path, FilePermissions.S_IRWXU, callback);
+        }
+
+        public void CreateDirectory(string path, FilePermissions permissions, Action<UvArgs> callback = null)
+        {
+            IntPtr req = IntPtr.Zero;
+
+            try
+            {
+                req = this.CreateRequest();
+                CheckError(Uvi.uv_fs_mkdir(this.Loop.Handle, req, path, (int) permissions, _mkdirDelegate));
+                _mkdirCallback = new UvCallback(this, callback);
+            }
+            catch (Exception)
+            {
+                this.FreeRequest(req);
+                throw;
+            }
+        }
+
+        private void OnCreateDirectory(IntPtr req)
+        {
+            _mkdirCallback.Invoke(this.FreeRequest(req), this.OnCreateDirectory, this.DirectoryCreated);
+            _mkdirCallback = null;
+        }
+
+        protected virtual void OnCreateDirectory(UvArgs args)
+        {
+        }
+
+        private UvCallback _rmdirCallback;
+
+        public void RemoveDirectory(string path, Action<UvArgs> callback = null)
+        {
+            IntPtr req = IntPtr.Zero;
+
+            try
+            {
+                req = this.CreateRequest();
+                CheckError(Uvi.uv_fs_rmdir(this.Loop.Handle, req, path, _rmdirDelegate));
+                _rmdirCallback = new UvCallback(this, callback);
+            }
+            catch (Exception)
+            {
+                this.FreeRequest(req);
+                throw;
+            }
+        }
+
+        private void OnRemoveDirectory(IntPtr req)
+        {
+            _rmdirCallback.Invoke(this.FreeRequest(req), this.OnRemoveDirectory, this.DirectoryRemoved);
+            _rmdirCallback = null;
+        }
+
+        protected virtual void OnRemoveDirectory(UvArgs args)
+        {
+        }
+
 
 		#region Dispose Management
 		/// <summary>

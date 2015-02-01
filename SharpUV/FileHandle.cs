@@ -421,6 +421,10 @@ namespace SharpUV
         {
         }
 
+        public void Stat(string path, Action<UvStatArgs> callback = null)
+        {
+
+        }
 
 		#region Dispose Management
 		/// <summary>

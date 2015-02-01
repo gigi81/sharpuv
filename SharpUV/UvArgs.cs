@@ -51,4 +51,20 @@ namespace SharpUV
 			get { return _data; }
 		}
 	}
+
+    public class UvStatArgs : UvArgs
+    {
+        private UvStat _stat;
+
+        public UvStatArgs(int error, IntPtr stat)
+			: base(error)
+		{
+            _stat = UvStat.Create(stat);
+		}
+
+        public UvStat Stat
+        {
+            get { return _stat; }
+        }
+    }
 }

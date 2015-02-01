@@ -159,6 +159,13 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void uv_fs_req_cleanup(IntPtr req);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="req">(uv_fs_t*)</param>
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr uv_fs_req_stat(IntPtr req);
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -258,6 +265,9 @@ namespace Libuv
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_rmdir(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_fs_stat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
 
 		#endregion
 

@@ -103,6 +103,7 @@ namespace SharpUV
                 if (status == 0)
                 {
                     var info = ((addrinfo)Marshal.PtrToStructure(addrinfo, typeof(addrinfo)));
+                    value = info.EndPoints.ToArray();
                 }
 
                 callback.Invoke(status, value, this.OnResolve, this.Resolved);

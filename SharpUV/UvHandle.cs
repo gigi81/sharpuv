@@ -34,45 +34,51 @@ namespace SharpUV
         Opening,
 		Open,
 		Closing,
-		Closed
+		Closed,
+        Resolving
 	}
 
 	public abstract class UvHandle : IDisposable
 	{
+	    private static int _allocatedHandles = 0;
+
 		public event EventHandler<UvArgs> Closed;
 
+        private readonly Loop _loop;
+        private IntPtr _handle;
         private UvCallback _closeCallback;
 
 		/// <summary>
 		/// The number of current allocated handles
 		/// </summary>
-		public static int CurrentlyAllocatedHandles { get; private set; }
+        public static int CurrentlyAllocatedHandles { get { return _allocatedHandles; } }
 
 		protected UvHandle(Loop loop, IntPtr handle)
 			: this(loop)
 		{
-			this.Handle = handle;
+			_handle = handle;
 		}
 
 		protected UvHandle(Loop loop, int handleSize)
 			: this(loop)
 		{
-			this.Handle = this.Alloc(handleSize);
+            _handle = this.Alloc(handleSize);
 		}
 
 		internal UvHandle(Loop loop, uv_handle_type handleType)
 			: this(loop)
 		{
-			this.Handle = this.Alloc(handleType);
+            _handle = this.Alloc(handleType);
 		}
 
 		private UvHandle(Loop loop)
 		{
-			this.Loop = loop;
+			_loop = loop;
+
 			this.Status = HandleStatus.Closed;
 			this.InitDelegates();
 
-			UvHandle.CurrentlyAllocatedHandles++;
+            _allocatedHandles++;
 		}
 
 		~UvHandle()
@@ -89,16 +95,15 @@ namespace SharpUV
 		}
 		#endregion
 
-
 		/// <summary>
 		/// The Loop wherein this object is running
 		/// </summary>
-		public Loop Loop { get; private set; }
+		public Loop Loop { get { return _loop; } }
 
 		/// <summary>
 		/// Pointer to the underlying libuv uv_handle_t
 		/// </summary>
-		internal IntPtr Handle { get; private set; }
+        internal IntPtr Handle { get { return _handle; } }
 
 		/// <summary>
 		/// Handle status
@@ -178,10 +183,10 @@ namespace SharpUV
 			if (this.IsDisposed)
 				return;
 
-		    if (this.Handle != IntPtr.Zero)
+            if (_handle != IntPtr.Zero)
 		    {
-		        this.Handle = this.Free(this.Handle);
-		        UvHandle.CurrentlyAllocatedHandles--;
+                _handle = this.Free(_handle);
+                _allocatedHandles--;
 		    }
 
             this.IsDisposed = true;

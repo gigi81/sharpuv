@@ -18,15 +18,8 @@ namespace SharpUV.Test
 		static void Main(string[] args)
 		{
 			TestServer ();
-			//TestFile ();
             Console.WriteLine("Done. Press any key to exit...");
 			Console.ReadKey();
-		}
-
-		static void TestFile()
-		{
-			var test = new FileTests();
-			test.Open ();
 		}
 
 		static void TestServer()

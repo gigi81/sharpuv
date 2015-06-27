@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace SharpUV
 {
@@ -57,14 +58,30 @@ namespace SharpUV
         private UvStat _stat;
 
         public UvStatArgs(int error, IntPtr stat)
-			: base(error)
-		{
+            : base(error)
+        {
             _stat = UvStat.Create(stat);
-		}
+        }
 
         public UvStat Stat
         {
             get { return _stat; }
+        }
+    }
+
+    public class UvIPEndPointArgs : UvArgs
+    {
+        private IPEndPoint[] _value;
+
+        public UvIPEndPointArgs(int error, IPEndPoint[] value)
+            : base(error)
+        {
+            _value = value;
+        }
+
+        public IPEndPoint[] Value
+        {
+            get { return _value; }
         }
     }
 }

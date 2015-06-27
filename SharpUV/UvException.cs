@@ -29,18 +29,24 @@ namespace SharpUV
 {
 	public class UvException : Exception
 	{
-		private int _error;
-		private string _message;
+		private readonly int _error;
 
 		public UvException(int error)
 		{
 			_error = error;
-			_message = Marshal.PtrToStringAnsi(Uvi.uv_strerror (error));
 		}
 
-		public override string Message {
-			get {
-				return _message;
+		public override string Message
+        {
+			get
+			{
+			    string ret = null;
+
+			    var ptr = Uvi.uv_strerror(_error);
+                if(ptr != IntPtr.Zero)
+                    ret = Marshal.PtrToStringAnsi(ptr);
+
+			    return ret ?? String.Empty;
 			}
 		}
 	}

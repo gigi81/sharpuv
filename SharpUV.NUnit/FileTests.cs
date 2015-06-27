@@ -1,7 +1,6 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Text;
-
+using NUnit.Framework;
 using SharpUV;
 
 namespace SharpUV.NUnit
@@ -15,7 +14,7 @@ namespace SharpUV.NUnit
 		}
 
 		[Test]
-		public void Open()
+		public void OpenFile()
 		{
 			var handle = new WriteFileHandle();
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);

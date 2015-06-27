@@ -47,6 +47,7 @@
     <Compile Include="BufferCollection.cs" />
     <Compile Include="BufferManager.cs" />
     <Compile Include="FileHandle.cs" />
+    <Compile Include="Libuv\AddrInfo.cs" />
     <Compile Include="Libuv\OffT.cs" />
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Libuv\Imports.cs" />

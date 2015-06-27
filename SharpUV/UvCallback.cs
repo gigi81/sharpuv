@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Net;
 
 namespace SharpUV
 {
 	internal abstract class UvCallback<TArgs> where TArgs : UvArgs
 	{
-        private object _parent;
+        private readonly object _parent;
 		protected Action<TArgs> _callback;
 
 		protected UvCallback(object sender, Action<TArgs> callback)
@@ -14,6 +15,11 @@ namespace SharpUV
 		}
 
 		protected abstract TArgs CreateArgs(int code);
+
+	    internal Action<TArgs> Callback
+	    {
+            get { return _callback; }
+	    }
 
 		public void Invoke(int code, Action<TArgs> callback, EventHandler<TArgs> handler)
 		{
@@ -55,7 +61,7 @@ namespace SharpUV
 
 		protected override UvDataArgs CreateArgs (int code)
 		{
-			return new UvDataArgs (code, _data);
+			return new UvDataArgs(code, _data);
 		}
 
         public void Invoke(int code, byte[] data, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
@@ -64,4 +70,26 @@ namespace SharpUV
             base.Invoke(code, callback, handler);
         }
 	}
+
+    internal class UvStringCallback : UvCallback<UvIPEndPointArgs>
+    {
+        private IPEndPoint[] _value;
+
+        internal UvStringCallback(object sender, Action<UvIPEndPointArgs> callback, IPEndPoint[] value)
+            : base(sender, callback)
+        {
+            _value = value;
+        }
+
+        protected override UvIPEndPointArgs CreateArgs(int code)
+        {
+            return new UvIPEndPointArgs(code, _value);
+        }
+
+        public void Invoke(int code, IPEndPoint[] value, Action<UvIPEndPointArgs> callback, EventHandler<UvIPEndPointArgs> handler)
+        {
+            _value = value;
+            base.Invoke(code, callback, handler);
+        }
+    }
 }

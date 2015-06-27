@@ -74,6 +74,9 @@ namespace Libuv
 	{
 		internal short sin_family;
 		internal ushort sin_port;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
+        byte[] data;
 	}
 
     // From: http://www.pinvoke.net/default.aspx/Structures/sockaddr_in6.html
@@ -82,6 +85,9 @@ namespace Libuv
     {
         internal short sin6_family;
         internal ushort sin6_port;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 24)]
+        byte[] data;
     }
 
     internal enum uv_err_code
@@ -221,5 +227,7 @@ namespace Libuv
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void uv_after_work_cb(IntPtr req, int status); //uv_work_t* req
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void uv_getaddrinfo_cb(IntPtr req, int status, IntPtr res); //uv_getaddrinfo_t* req, struct addrinfo* res
 	#endregion
 }

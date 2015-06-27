@@ -128,7 +128,7 @@ namespace SharpUV
 
         public void Write(byte[] data, Action<UvDataArgs> callback = null)
 		{
-			this.Write(data, 0, data.Length);
+			this.Write(data, 0, data.Length, callback);
 		}
 
         public void Write(byte[] data, int offset, int length, Action<UvDataArgs> callback = null)

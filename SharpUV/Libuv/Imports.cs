@@ -118,6 +118,11 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int uv_ip6_addr(string ip, int port, IntPtr address); //sockaddr_in6
 
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_ip4_name(IntPtr src, IntPtr dst, uint size); //sockaddr_in*
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_ip6_name(IntPtr src, IntPtr dst, uint size); //sockaddr_in6*
+
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
         internal static extern int uv_tcp_bind(IntPtr handle, IntPtr address, uv_tcp_flags flags); // uv_tcp_t*, sockaddr_in*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
@@ -151,6 +156,12 @@ namespace Libuv
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_process_kill(IntPtr process, int signum); // uv_process_t*
 
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_getaddrinfo(IntPtr loop, IntPtr req, uv_getaddrinfo_cb cb, string node, string service, IntPtr hints); // uv_loop_t*, uv_getaddrinfo_t* req, const struct addrinfo* hints
+
+        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int uv_freeaddrinfo(IntPtr ai); //struct addrinfo* ai
+
 		#region Filesystem functions
 		/// <summary>
 		/// 
@@ -159,20 +170,13 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void uv_fs_req_cleanup(IntPtr req);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="req">(uv_fs_t*)</param>
-        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr uv_fs_req_stat(IntPtr req);
-
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="req">(uv_fs_t*)</param>
 		/// <returns></returns>
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern uv_file uv_fs_req_result(IntPtr req);
+		internal static extern int uv_fs_req_result(IntPtr req);
 
 		/// <summary>
 		/// 
@@ -265,9 +269,6 @@ namespace Libuv
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_rmdir(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
-
-        [DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int uv_fs_stat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
 
 		#endregion
 

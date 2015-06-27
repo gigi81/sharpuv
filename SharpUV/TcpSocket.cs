@@ -19,17 +19,21 @@
 #endregion
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using Libuv;
 
 namespace SharpUV
 {
 	public class TcpClientSocket : TcpSocket
 	{
+        public EventHandler<UvIPEndPointArgs> Resolved;
         public EventHandler<UvArgs> Connected;
 
-	    private IntPtr _address;
+	    private IntPtr _resolveReq = IntPtr.Zero;
+	    private IntPtr _address = IntPtr.Zero;
 
 		public TcpClientSocket()
 			: this(Loop.Default)
@@ -43,12 +47,14 @@ namespace SharpUV
 		}
 
 		#region Delegates
+        private uv_getaddrinfo_cb _resolveDelegate;
 		private uv_connect_cb _connectDelegate;
 
 		protected override void InitDelegates()
 		{
 			base.InitDelegates();
 			_connectDelegate = new uv_connect_cb(this.OnConnect);
+            _resolveDelegate = new uv_getaddrinfo_cb(this.OnResolve);
 		}
 
 		#endregion
@@ -59,13 +65,76 @@ namespace SharpUV
 		/// <remarks>Handle type is <typeparamref name="Libuv.uv_connect_t"/></remarks>
 		internal IntPtr Connection { get; set; }
 
+        private UvStringCallback _resolveCallback;
+
+        public void Resolve(string node, string service, Action<UvIPEndPointArgs> callback = null)
+        {
+            var hints = addrinfo.CreateHints();
+            var hintsPtr = this.Alloc(Marshal.SizeOf(typeof(addrinfo)));
+            Marshal.StructureToPtr(hints, hintsPtr, fDeleteOld: false);
+
+            try
+            {
+                _resolveReq = this.Alloc(uv_req_type.UV_GETADDRINFO);
+                CheckError(Uvi.uv_getaddrinfo(this.Loop.Handle, _resolveReq, _resolveDelegate, node, service, hintsPtr));
+                this.Status = HandleStatus.Resolving;
+                _resolveCallback = new UvStringCallback(this, callback, null);
+            }
+            catch (Exception)
+            {
+                this.Free(_resolveReq);
+                _connectCallback = null;
+                throw;
+            }
+            finally
+            {
+                this.Free(hintsPtr);
+            }
+        }
+
+        private void OnResolve(IntPtr resolver, int status, IntPtr addrinfo)
+        {
+            var callback = _resolveCallback;
+            _resolveCallback = null;
+
+            try
+            {
+                IPEndPoint[] value = null;
+                if (status == 0)
+                {
+                    var info = ((addrinfo)Marshal.PtrToStructure(addrinfo, typeof(addrinfo)));
+                }
+
+                callback.Invoke(status, value, this.OnResolve, this.Resolved);
+            }
+            finally
+            {
+                Uvi.uv_freeaddrinfo(addrinfo);
+                this.Free(_resolveReq);
+            }
+        }
+
+        protected virtual void OnResolve(UvIPEndPointArgs args)
+        {
+        }
+
         private UvCallback _connectCallback;
 
+        public void Connect(string ip, int port, Action<UvArgs> callback = null)
+        {
+            this.Connect(TcpSocket.AllocSocketAddress(new IPEndPoint(IPAddress.Parse(ip), port), this.Loop), callback);
+        }
+
         public void Connect(IPEndPoint endpoint, Action<UvArgs> callback = null)
+        {
+            this.Connect(TcpSocket.AllocSocketAddress(endpoint, this.Loop), callback);
+        }
+
+        public void Connect(IntPtr address, Action<UvArgs> callback = null)
 		{
 		    try
 		    {
-                _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
+		        _address = address;
                 CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
                 this.Status = HandleStatus.Opening;
                 _connectCallback = new UvCallback(this, callback);
@@ -80,9 +149,11 @@ namespace SharpUV
 
 		private void OnConnect(IntPtr connection, int status)
 		{
-			this.Status = status == 0 ? HandleStatus.Open : HandleStatus.Closed;
-            _connectCallback.Invoke(status, this.OnConnect, this.Connected);
+            var callback = _connectCallback;
             _connectCallback = null;
+
+			this.Status = status == 0 ? HandleStatus.Open : HandleStatus.Closed;
+            callback.Invoke(status, this.OnConnect, this.Connected);
 		}
 
 		protected virtual void OnConnect(UvArgs args)

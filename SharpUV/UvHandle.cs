@@ -126,8 +126,11 @@ namespace SharpUV
 
 		private void OnClose(IntPtr handle)
 		{
+            var callback = _closeCallback;
+            _closeCallback = null;
+
 			this.Status = HandleStatus.Closed;
-            _closeCallback.Invoke((int)handle, this.OnClose, this.Closed);
+            callback.Invoke((int)handle, this.OnClose, this.Closed);
 			if (this.DisposeAfterClose)
 				this.Dispose(true);
 		}

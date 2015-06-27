@@ -70,26 +70,4 @@ namespace SharpUV
             base.Invoke(code, callback, handler);
         }
 	}
-
-    internal class UvStringCallback : UvCallback<UvIPEndPointArgs>
-    {
-        private IPEndPoint[] _value;
-
-        internal UvStringCallback(object sender, Action<UvIPEndPointArgs> callback, IPEndPoint[] value)
-            : base(sender, callback)
-        {
-            _value = value;
-        }
-
-        protected override UvIPEndPointArgs CreateArgs(int code)
-        {
-            return new UvIPEndPointArgs(code, _value);
-        }
-
-        public void Invoke(int code, IPEndPoint[] value, Action<UvIPEndPointArgs> callback, EventHandler<UvIPEndPointArgs> handler)
-        {
-            _value = value;
-            base.Invoke(code, callback, handler);
-        }
-    }
 }

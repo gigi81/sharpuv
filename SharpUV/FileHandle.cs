@@ -201,10 +201,12 @@ namespace SharpUV
 
 		private void OnOpen(IntPtr req)
 		{
+            var callback = _openCallback;
+            _openCallback = null;
+
 			_file = this.FreeRequest(req);
 			this.Status = _file != -1 ? FileHandleStatus.Open : FileHandleStatus.Closed;
-			_openCallback.Invoke(_file, this.OnOpen, this.Opened);
-			_openCallback = null;
+            callback.Invoke(_file, this.OnOpen, this.Opened);
 		}
 
 		protected virtual void OnOpen(UvArgs args)
@@ -239,11 +241,13 @@ namespace SharpUV
 
 		private void OnClose(IntPtr req)
 		{
+            var callback = _closeCallback;
+            _closeCallback = null;
+
 			_file = this.FreeRequest(req);
 			if(_file != -1)
 				this.Status = FileHandleStatus.Closed;
-			_closeCallback.Invoke(_file, this.OnClose, this.Closed);
-			_closeCallback = null;
+            callback.Invoke(_file, this.OnClose, this.Closed);
 
 			this.Dispose(false);
 		}
@@ -284,8 +288,10 @@ namespace SharpUV
 
 		private void OnRead(IntPtr req)
 		{
-			_readCallback.Invoke(this.FreeRequest(req), this.OnRead, this.OnReadData);
-			_readCallback = null;
+            var callback = _readCallback;
+            _readCallback = null;
+
+			callback.Invoke(this.FreeRequest(req), this.OnRead, this.OnReadData);
 		}
 
 		protected virtual void OnRead(UvDataArgs args)
@@ -321,8 +327,10 @@ namespace SharpUV
 
 		private void OnWrite(IntPtr req)
 		{
-			_writeCallback.Invoke(this.FreeRequest(req), this.OnWrite, this.OnWriteData);
-			_writeCallback = null;
+            var callback = _writeCallback;
+            _writeCallback = null;
+
+            callback.Invoke(this.FreeRequest(req), this.OnWrite, this.OnWriteData);
 		}
 
 		protected virtual void OnWrite(UvDataArgs args)
@@ -384,8 +392,10 @@ namespace SharpUV
 
         private void OnCreateDirectory(IntPtr req)
         {
-            _mkdirCallback.Invoke(this.FreeRequest(req), this.OnCreateDirectory, this.DirectoryCreated);
+            var callback = _mkdirCallback;
             _mkdirCallback = null;
+
+            callback.Invoke(this.FreeRequest(req), this.OnCreateDirectory, this.DirectoryCreated);
         }
 
         protected virtual void OnCreateDirectory(UvArgs args)
@@ -413,8 +423,10 @@ namespace SharpUV
 
         private void OnRemoveDirectory(IntPtr req)
         {
-            _rmdirCallback.Invoke(this.FreeRequest(req), this.OnRemoveDirectory, this.DirectoryRemoved);
+            var callback = _rmdirCallback;
             _rmdirCallback = null;
+
+            callback.Invoke(this.FreeRequest(req), this.OnRemoveDirectory, this.DirectoryRemoved);
         }
 
         protected virtual void OnRemoveDirectory(UvArgs args)

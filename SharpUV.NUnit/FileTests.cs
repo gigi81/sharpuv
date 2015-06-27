@@ -14,12 +14,12 @@ namespace SharpUV.NUnit
 		}
 
 		[Test]
-		public void OpenFile()
+		public void CreateFileAndWriteToIt()
 		{
 			var handle = new WriteFileHandle();
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
-			Loop.Default.Run ();
+			Loop.Default.Run();
 
 			Assert.AreEqual(System.IO.File.ReadAllText(TestFilePath), "test");
 		}

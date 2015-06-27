@@ -38,9 +38,9 @@ namespace SharpUV.NUnit
                     return;
                 }
 
-                Console.WriteLine("host resolved to {0}", args1.Value);
+                Console.WriteLine("host resolved to {0}", args1.Data);
 
-                client.Connect(args1.Value[0], (args2) =>
+                client.Connect(args1.Data[0], (args2) =>
                 {
                     if (!args2.IsSuccesful)
                     {
@@ -48,7 +48,7 @@ namespace SharpUV.NUnit
                         return;
                     }
 
-                    Console.WriteLine("connection to {0} successful", args1.Value);
+                    Console.WriteLine("connection to {0} successful", args1.Data);
 
                     client.Close(false, (args3) =>
                     {
@@ -90,12 +90,12 @@ namespace SharpUV.NUnit
             this.Resolve(_uri.DnsSafeHost, _uri.Port.ToString());
         }
 
-        protected override void OnResolve(UvIPEndPointArgs args)
+        protected override void OnResolve(UvArgs<IPEndPoint[]> args)
         {
             if(!this.Check(args))
                 return;
 
-            _endpoints = args.Value;
+            _endpoints = args.Data;
             this.Connect(this.GetNextEndPoint());
         }
 

@@ -24,12 +24,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Libuv;
+using SharpUV.Callbacks;
 
 namespace SharpUV
 {
 	public class TcpClientSocket : TcpSocket
 	{
-        public EventHandler<UvIPEndPointArgs> Resolved;
+        public EventHandler<UvArgs<IPEndPoint[]>> Resolved;
         public EventHandler<UvArgs> Connected;
 
 	    private IntPtr _resolveReq = IntPtr.Zero;
@@ -65,9 +66,9 @@ namespace SharpUV
 		/// <remarks>Handle type is <typeparamref name="Libuv.uv_connect_t"/></remarks>
 		internal IntPtr Connection { get; set; }
 
-        private UvStringCallback _resolveCallback;
+        private UvEndPointsCallback _resolveCallback;
 
-        public void Resolve(string node, string service, Action<UvIPEndPointArgs> callback = null)
+        public void Resolve(string node, string service, Action<UvArgs<IPEndPoint[]>> callback = null)
         {
             var hints = addrinfo.CreateHints();
             var hintsPtr = this.Alloc(Marshal.SizeOf(typeof(addrinfo)));
@@ -78,7 +79,7 @@ namespace SharpUV
                 _resolveReq = this.Alloc(uv_req_type.UV_GETADDRINFO);
                 CheckError(Uvi.uv_getaddrinfo(this.Loop.Handle, _resolveReq, _resolveDelegate, node, service, hintsPtr));
                 this.Status = HandleStatus.Resolving;
-                _resolveCallback = new UvStringCallback(this, callback, null);
+                _resolveCallback = new UvEndPointsCallback(this, callback, null);
             }
             catch (Exception)
             {
@@ -115,7 +116,7 @@ namespace SharpUV
             }
         }
 
-        protected virtual void OnResolve(UvIPEndPointArgs args)
+        protected virtual void OnResolve(UvArgs<IPEndPoint[]> args)
         {
         }
 

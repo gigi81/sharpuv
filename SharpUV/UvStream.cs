@@ -91,6 +91,7 @@ namespace SharpUV
 		{
 			CheckError(Uvi.uv_read_stop(this.Handle));
             _isReading = false;
+            _readCallback = null;
 		}
 
         public bool IsReading { get { return _isReading; } }
@@ -110,7 +111,8 @@ namespace SharpUV
         private void OnRead(IntPtr stream, int nread, IntPtr buf)
 		{
             var data = this.Loop.Buffers.CopyAndDeleteBuffer(buf, (int)nread);
-            _readCallback.Invoke((int)nread, data, this.OnRead, this.OnReadData);
+            if (_readCallback != null)
+                _readCallback.Invoke((int)nread, data, this.OnRead, this.OnReadData);
 
             if (nread < 0)
 				this.Close();
@@ -150,8 +152,11 @@ namespace SharpUV
 
 		private void OnWrite(IntPtr requestHandle, int status)
 		{
+            var callback = _writeCallback;
+            _writeCallback = null;
+
 			this.Loop.Requests.Delete(requestHandle);
-            _writeCallback.Invoke(status, this.OnWrite, this.OnWriteData);
+            callback.Invoke(status, this.OnWrite, this.OnWriteData);
 		}
 
 		public void Shutdown(Action<UvArgs> callback = null)
@@ -175,8 +180,11 @@ namespace SharpUV
 
 		private void OnShutdown(IntPtr req, int status)
 		{
+            var callback = _shutdownCallback;
+            _shutdownCallback = null;
+
             this.Free(req);
-            _shutdownCallback.Invoke(status, this.OnShutdown, this.ShuttedDown);
+            callback.Invoke(status, this.OnShutdown, this.ShuttedDown);
 			this.Close();
 		}
 

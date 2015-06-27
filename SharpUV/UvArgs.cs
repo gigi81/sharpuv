@@ -37,6 +37,22 @@ namespace SharpUV
 		}
 	}
 
+    public class UvArgs<T> : UvArgs
+    {
+        private T _data;
+
+        public UvArgs(int error, T data)
+            : base(error)
+        {
+            _data = data;
+        }
+
+        public T Data
+        {
+            get { return _data; }
+        }
+    }
+
 	public class UvDataArgs : UvArgs
 	{
 		private byte[] _data;
@@ -66,22 +82,6 @@ namespace SharpUV
         public UvStat Stat
         {
             get { return _stat; }
-        }
-    }
-
-    public class UvIPEndPointArgs : UvArgs
-    {
-        private IPEndPoint[] _value;
-
-        public UvIPEndPointArgs(int error, IPEndPoint[] value)
-            : base(error)
-        {
-            _value = value;
-        }
-
-        public IPEndPoint[] Value
-        {
-            get { return _value; }
         }
     }
 }

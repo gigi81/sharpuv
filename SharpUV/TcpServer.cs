@@ -26,12 +26,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Runtime.InteropServices;
 using Libuv;
+using SharpUV.Callbacks;
 
 namespace SharpUV
 {
 	public class TcpServer : UvHandle
 	{
 		public const int DefaultBackLog = 128;
+
+        public event EventHandler<UvArgs<TcpServerSocket>> ClientConnected;
 
 		private readonly HashSet<TcpServerSocket> _clients = new HashSet<TcpServerSocket>();
 	    private IntPtr _address = IntPtr.Zero;
@@ -66,7 +69,9 @@ namespace SharpUV
 			get { return _clients; }
 		}
 
-		public void StartListening(IPEndPoint endpoint)
+        private UvTcpServerSocketCallback _connectCallback;
+
+        public void StartListening(IPEndPoint endpoint, Action<UvArgs<TcpServerSocket>> callback = null)
 		{
 		    try
 		    {
@@ -74,6 +79,7 @@ namespace SharpUV
                 CheckError(Uvi.uv_tcp_bind(this.Handle, _address, 0));
                 CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));
 				this.Status = HandleStatus.Open;
+                _connectCallback = new UvTcpServerSocketCallback(this, callback);
 		    }
 		    catch (Exception)
 		    {
@@ -83,15 +89,23 @@ namespace SharpUV
 
 		private void OnClientConnected(IntPtr server, int status)
 		{
-			var client = this.CreateClientSocket();
-			client.Closed += this.OnClientClosed;
-			_clients.Add(client);
+            var callback = _connectCallback;
+            _connectCallback = null;
+
+            callback.Invoke(this.AddClient(), this.OnClientConnected, this.ClientConnected);
 		}
 
-		private void OnClientClosed(object sender, EventArgs e)
-		{
-            _clients.Remove(sender as TcpServerSocket);
-		}
+        private TcpServerSocket AddClient()
+        {
+            var client = this.CreateClientSocket();
+            client.Closed += (sender, e) => { _clients.Remove(client); };
+            _clients.Add(client);
+            return client;
+        }
+
+        protected virtual void OnClientConnected(UvArgs<TcpServerSocket> args)
+        {
+        }
 
 		protected virtual TcpServerSocket CreateClientSocket()
 		{

@@ -83,8 +83,8 @@ namespace SharpUV
 	{
         public event EventHandler<UvArgs> Opened;
 		public event EventHandler<UvArgs> Closed;
-        public event EventHandler<UvDataArgs> OnReadData;
-        public event EventHandler<UvDataArgs> OnWriteData;
+        public event EventHandler<UvDataArgs> DataRead;
+        public event EventHandler<UvDataArgs> DataWrite;
         public event EventHandler<UvArgs> DirectoryCreated;
         public event EventHandler<UvArgs> DirectoryRemoved;
 
@@ -293,7 +293,7 @@ namespace SharpUV
             var callback = _readCallback;
             _readCallback = null;
 
-			callback.Invoke(this.FreeRequest(req), this.OnRead, this.OnReadData);
+			callback.Invoke(this.FreeRequest(req), this.OnRead, this.DataRead);
 		}
 
 		protected virtual void OnRead(UvDataArgs args)
@@ -332,7 +332,7 @@ namespace SharpUV
             var callback = _writeCallback;
             _writeCallback = null;
 
-            callback.Invoke(this.FreeRequest(req), this.OnWrite, this.OnWriteData);
+            callback.Invoke(this.FreeRequest(req), this.OnWrite, this.DataWrite);
 		}
 
 		protected virtual void OnWrite(UvDataArgs args)

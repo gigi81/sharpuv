@@ -30,8 +30,8 @@ namespace SharpUV
 {
 	public class TcpClientSocket : TcpSocket
 	{
-        public EventHandler<UvArgs<IPEndPoint[]>> Resolved;
-        public EventHandler<UvArgs> Connected;
+        public event EventHandler<UvArgs<IPEndPoint[]>> Resolved;
+        public event EventHandler<UvArgs> Connected;
 
 	    private IntPtr _resolveReq = IntPtr.Zero;
 	    private IntPtr _address = IntPtr.Zero;

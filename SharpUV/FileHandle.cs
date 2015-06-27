@@ -249,9 +249,9 @@ namespace SharpUV
 			_file = this.FreeRequest(req);
 			if(_file != -1)
 				this.Status = FileHandleStatus.Closed;
-            callback.Invoke(_file, this.OnClose, this.Closed);
 
 			this.Dispose(false);
+            callback.Invoke(_file, this.OnClose, this.Closed);
 		}
 
 		protected virtual void OnClose(UvArgs args)

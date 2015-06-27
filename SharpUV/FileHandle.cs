@@ -30,10 +30,10 @@ namespace SharpUV
 {
 	public enum FileHandleStatus
 	{
+        Closed = 0,
 		Opening,
 		Open,
 		Closing,
-		Closed
 	}
 
 	public enum FileAccessMode
@@ -46,7 +46,7 @@ namespace SharpUV
 	[Flags]
 	public enum FileOpenMode
 	{
-		Default 	 = 0x0000,
+		Default 	     = 0x0000,
 		Append 		 = 0x0008,  /* writes done at eof */
 		Create 		 = 0x0100,  /* create and open file */
 		Truncate 	 = 0x0200,  /* open and truncate */
@@ -56,7 +56,6 @@ namespace SharpUV
 	}
 
 	[Flags]
-	[CLSCompliant (false)]
 	public enum FilePermissions
 	{
 		S_ISUID     = 0x0800, // Set user ID on execution
@@ -89,7 +88,7 @@ namespace SharpUV
         public event EventHandler<UvArgs> DirectoryCreated;
         public event EventHandler<UvArgs> DirectoryRemoved;
 
-		private FileHandleStatus _status;
+		private FileHandleStatus _status = FileHandleStatus.Closed;
 		private int _file = 0;
 
 		public FileHandle()
@@ -106,7 +105,7 @@ namespace SharpUV
 
 		~FileHandle()
 		{
-			this.Close();
+            this.Dispose();
 		}
 
 		#region Delegates
@@ -175,8 +174,11 @@ namespace SharpUV
 
 		public void Open(string path, FileAccessMode access, FileOpenMode mode, FilePermissions permissions, Action<UvArgs> callback = null)
 		{
-			if (this.Status != FileHandleStatus.Closed)
-				return;
+            if (this.IsDisposed)
+                throw new InvalidOperationException("Cannot open a stream after it has been disposed");
+
+            if (this.Status != FileHandleStatus.Closed)
+                throw new InvalidOperationException(String.Format("Cannot open a file handle when it's status is {0}", this.Status));
 
 			IntPtr req = IntPtr.Zero;
 
@@ -220,8 +222,8 @@ namespace SharpUV
 		/// </summary>
 		public void Close(Action<UvArgs> callback = null)
 		{
-			if (this.Status != FileHandleStatus.Open)
-				return;
+            if (this.Status != FileHandleStatus.Open)
+                throw new InvalidOperationException(String.Format("Cannot close the file handle while the status is {0}", this.Status));
 
 			IntPtr req = IntPtr.Zero;
 
@@ -449,7 +451,10 @@ namespace SharpUV
 		/// </summary>
 		public void Dispose()
 		{
-			this.Close();
+            if (this.Status != FileHandleStatus.Closed)
+                this.Close(); //it will call dispose on the close callback
+            else
+                this.Dispose(true);
 		}
 
 		protected virtual void Dispose(bool disposing)

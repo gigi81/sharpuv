@@ -28,14 +28,17 @@ namespace SharpUV
 {
 	public class Timer : UvHandle
 	{
+        public event EventHandler Tick;
+
 		private TimeSpan _repeat;
+        private Action _callback;
 
 		public Timer()
 			: this(Loop.Default)
 		{
 		}
 
-		public Timer(Loop loop)
+        public Timer(Loop loop)
 			: base(loop, uv_handle_type.UV_TIMER)
 		{
 			CheckError(Uvi.uv_timer_init(this.Loop.Handle, this.Handle));
@@ -56,14 +59,16 @@ namespace SharpUV
 			}
 		}
 
-		public void Start()
+		public void Start(Action callback = null)
 		{
 			CheckError(Uvi.uv_timer_start(this.Handle, this.OnTick, this.Delay.TotalMilliseconds, this.Repeat.TotalMilliseconds));
+            _callback = callback;
 		}
 
 		public void Stop()
 		{
 			CheckError(Uvi.uv_timer_stop(this.Handle));
+            _callback = null;
 		}
 
 		public void Again()
@@ -74,6 +79,12 @@ namespace SharpUV
 		private void OnTick(IntPtr watcher, int status)
 		{
 			this.OnTick();
+
+            if (this.Tick != null)
+                this.Tick(this, EventArgs.Empty);
+
+            if (_callback != null)
+                _callback();
 		}
 
 		protected virtual void OnTick()

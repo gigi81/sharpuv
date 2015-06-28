@@ -10,7 +10,7 @@ namespace SharpUV.Callbacks
     {
         private IPEndPoint[] _value;
 
-        internal UvEndPointsCallback(object sender, Action<UvArgs<IPEndPoint[]>> callback, IPEndPoint[] value)
+        internal UvEndPointsCallback(object sender, Action<UvArgs<IPEndPoint[]>> callback, IPEndPoint[] value = null)
             : base(sender, callback)
         {
             _value = value;

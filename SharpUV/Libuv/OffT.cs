@@ -58,7 +58,7 @@ namespace Libuv
 
 		public void CleanUpNativeData(IntPtr pNativeData)
 		{
-			Marshal.FreeCoTaskMem(pNativeData);
+            // Nothing to do
 		}
 
 		public int GetNativeDataSize()

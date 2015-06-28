@@ -260,15 +260,15 @@ namespace SharpUV
 
 		private UvDataCallback _readCallback;
 
-		public void Read(byte[] data, Action<UvDataArgs> callback = null)
+		public void Read(Action<UvDataArgs> callback = null)
 		{
-			this.Read (data, 0, data.Length, callback);
+			this.Read (1024, callback);
 		}
 
 		/// <summary>
 		/// Read from the file
 		/// </summary>
-		public void Read(byte[] data, int offset, int length, Action<UvDataArgs> callback = null)
+		public void Read(uint length, Action<UvDataArgs> callback = null)
 		{
 			if (this.Status != FileHandleStatus.Open)
 				throw new InvalidOperationException("File handle must be open in order to read data");
@@ -277,9 +277,9 @@ namespace SharpUV
 
 			try
 			{
-				req = this.CreateRequest(data, offset, length);
+				req = this.CreateRequest(length);
 				CheckError(Uvi.uv_fs_read(this.Loop.Handle, req, _file, new[] { this.Loop.Requests[req] }, 1, -1, _readDelegate));
-                _readCallback = new UvDataCallback(this, callback, data);
+                _readCallback = new UvDataCallback(this, callback);
 			}
 			catch (Exception)
 			{
@@ -293,7 +293,7 @@ namespace SharpUV
             var callback = _readCallback;
             _readCallback = null;
 
-			callback.Invoke(this.FreeRequest(req), this.OnRead, this.DataRead);
+			callback.Invoke(this.FreeReadRequest(req), this.OnRead, this.DataRead);
 		}
 
 		protected virtual void OnRead(UvDataArgs args)
@@ -349,6 +349,11 @@ namespace SharpUV
 			return this.Loop.Requests.Create(uv_req_type.UV_FS);
 		}
 
+        internal IntPtr CreateRequest(uint length)
+        {
+            return this.Loop.Requests.Create(uv_req_type.UV_FS, length);
+        }
+
 		internal IntPtr CreateRequest(byte[] data, int offset, int length)
 		{
 			return this.Loop.Requests.Create(uv_req_type.UV_FS, data, offset, length);
@@ -362,11 +367,19 @@ namespace SharpUV
 			var ret = Uvi.uv_fs_req_result(req);
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
-			if (ret < 0)
-				throw new UvException(ret);
-
 			return ret;
 		}
+
+        internal UvDataArgs FreeReadRequest(IntPtr req)
+        {
+            if (req == IntPtr.Zero)
+                return new UvDataArgs(-1, new byte[0]);
+
+            var ret = Uvi.uv_fs_req_result(req);
+            Uvi.uv_fs_req_cleanup(req);
+            var data = this.Loop.Requests.CopyAndDelete(req, (int)ret);
+            return new UvDataArgs(ret, data);
+        }
 
         private UvCallback _mkdirCallback;
 

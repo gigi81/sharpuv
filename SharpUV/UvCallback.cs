@@ -23,16 +23,19 @@ namespace SharpUV
 
 		public void Invoke(int code, Action<TArgs> callback, EventHandler<TArgs> handler)
 		{
-			var args = this.CreateArgs(code);
+			this.Invoke(this.CreateArgs(code), callback, handler);
+		}
 
+		protected void Invoke(TArgs args, Action<TArgs> callback, EventHandler<TArgs> handler)
+		{
 			if (callback != null)
-				callback.Invoke (args);
+				callback.Invoke(args);
 
-			if(_callback != null)
-				_callback.Invoke (args);
+			if (_callback != null)
+				_callback.Invoke(args);
 
-            if (handler != null)
-                handler(_parent, args);
+			if (handler != null)
+				handler(_parent, args);
 		}
 	}
 
@@ -53,7 +56,7 @@ namespace SharpUV
 	{
 		private byte[] _data;
 
-		internal UvDataCallback(object sender, Action<UvDataArgs> callback, byte[] data)
+		internal UvDataCallback(object sender, Action<UvDataArgs> callback, byte[] data = null)
 			: base(sender, callback)
 		{
 			_data = data;
@@ -64,10 +67,9 @@ namespace SharpUV
 			return new UvDataArgs(code, _data);
 		}
 
-        public void Invoke(int code, byte[] data, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
+        public void Invoke(UvDataArgs args, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
         {
-            _data = data;
-            base.Invoke(code, callback, handler);
+			base.Invoke(args, callback, handler);
         }
 	}
 }

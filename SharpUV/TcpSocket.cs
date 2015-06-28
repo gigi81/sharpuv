@@ -30,11 +30,11 @@ namespace SharpUV
 {
 	public class TcpClientSocket : TcpSocket
 	{
-        public event EventHandler<UvArgs<IPEndPoint[]>> Resolved;
-        public event EventHandler<UvArgs> Connected;
+		public event EventHandler<UvArgs<IPEndPoint[]>> Resolved;
+		public event EventHandler<UvArgs> Connected;
 
-	    private IntPtr _resolveReq = IntPtr.Zero;
-	    private IntPtr _address = IntPtr.Zero;
+		private IntPtr _resolveReq = IntPtr.Zero;
+		private IntPtr _address = IntPtr.Zero;
 
 		public TcpClientSocket()
 			: this(Loop.Default)
@@ -48,14 +48,14 @@ namespace SharpUV
 		}
 
 		#region Delegates
-        private uv_getaddrinfo_cb _resolveDelegate;
+		private uv_getaddrinfo_cb _resolveDelegate;
 		private uv_connect_cb _connectDelegate;
 
 		protected override void InitDelegates()
 		{
 			base.InitDelegates();
 			_connectDelegate = new uv_connect_cb(this.OnConnect);
-            _resolveDelegate = new uv_getaddrinfo_cb(this.OnResolve);
+			_resolveDelegate = new uv_getaddrinfo_cb(this.OnResolve);
 		}
 
 		#endregion
@@ -66,96 +66,96 @@ namespace SharpUV
 		/// <remarks>Handle type is <typeparamref name="Libuv.uv_connect_t"/></remarks>
 		internal IntPtr Connection { get; set; }
 
-        private UvEndPointsCallback _resolveCallback;
+		private UvEndPointsCallback _resolveCallback;
 
-        public void Resolve(string node, string service, Action<UvArgs<IPEndPoint[]>> callback = null)
-        {
-            var hints = addrinfo.CreateHints();
-            var hintsPtr = this.Alloc(Marshal.SizeOf(typeof(addrinfo)));
-            Marshal.StructureToPtr(hints, hintsPtr, fDeleteOld: false);
-
-            try
-            {
-                _resolveReq = this.Alloc(uv_req_type.UV_GETADDRINFO);
-                CheckError(Uvi.uv_getaddrinfo(this.Loop.Handle, _resolveReq, _resolveDelegate, node, service, hintsPtr));
-                this.Status = HandleStatus.Resolving;
-                _resolveCallback = new UvEndPointsCallback(this, callback, null);
-            }
-            catch (Exception)
-            {
-                this.Free(_resolveReq);
-                _connectCallback = null;
-                throw;
-            }
-            finally
-            {
-                this.Free(hintsPtr);
-            }
-        }
-
-        private void OnResolve(IntPtr resolver, int status, IntPtr addrinfo)
-        {
-            var callback = _resolveCallback;
-            _resolveCallback = null;
-
-            try
-            {
-                IPEndPoint[] value = null;
-                if (status == 0)
-                {
-                    var info = ((addrinfo)Marshal.PtrToStructure(addrinfo, typeof(addrinfo)));
-                    value = info.EndPoints.ToArray();
-                }
-
-                callback.Invoke(status, value, this.OnResolve, this.Resolved);
-            }
-            finally
-            {
-                Uvi.uv_freeaddrinfo(addrinfo);
-                this.Free(_resolveReq);
-            }
-        }
-
-        protected virtual void OnResolve(UvArgs<IPEndPoint[]> args)
-        {
-        }
-
-        private UvCallback _connectCallback;
-
-        public void Connect(string ip, int port, Action<UvArgs> callback = null)
-        {
-            this.Connect(TcpSocket.AllocSocketAddress(new IPEndPoint(IPAddress.Parse(ip), port), this.Loop), callback);
-        }
-
-        public void Connect(IPEndPoint endpoint, Action<UvArgs> callback = null)
-        {
-            this.Connect(TcpSocket.AllocSocketAddress(endpoint, this.Loop), callback);
-        }
-
-        public void Connect(IntPtr address, Action<UvArgs> callback = null)
+		public void Resolve(string node, string service, Action<UvArgs<IPEndPoint[]>> callback = null)
 		{
-		    try
-		    {
-		        _address = address;
-                CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
-                this.Status = HandleStatus.Opening;
-                _connectCallback = new UvCallback(this, callback);
-		    }
-		    catch (Exception)
-		    {
-                _address = Free(_address);
-                _connectCallback = null;
-		        throw;
-		    }
+			var hints = addrinfo.CreateHints();
+			var hintsPtr = this.Alloc(Marshal.SizeOf(typeof(addrinfo)));
+			Marshal.StructureToPtr(hints, hintsPtr, fDeleteOld: false);
+
+			try
+			{
+				_resolveReq = this.Alloc(uv_req_type.UV_GETADDRINFO);
+				CheckError(Uvi.uv_getaddrinfo(this.Loop.Handle, _resolveReq, _resolveDelegate, node, service, hintsPtr));
+				this.Status = HandleStatus.Resolving;
+				_resolveCallback = new UvEndPointsCallback(this, callback);
+			}
+			catch (Exception)
+			{
+				this.Free(_resolveReq);
+				_connectCallback = null;
+				throw;
+			}
+			finally
+			{
+				this.Free(hintsPtr);
+			}
+		}
+
+		private void OnResolve(IntPtr resolver, int status, IntPtr addrinfo)
+		{
+			var callback = _resolveCallback;
+			_resolveCallback = null;
+
+			try
+			{
+				IPEndPoint[] value = null;
+				if (status == 0)
+				{
+					var info = ((addrinfo)Marshal.PtrToStructure(addrinfo, typeof(addrinfo)));
+					value = info.EndPoints.ToArray();
+				}
+
+				callback.Invoke(status, value, this.OnResolve, this.Resolved);
+			}
+			finally
+			{
+				Uvi.uv_freeaddrinfo(addrinfo);
+				this.Free(_resolveReq);
+			}
+		}
+
+		protected virtual void OnResolve(UvArgs<IPEndPoint[]> args)
+		{
+		}
+
+		private UvCallback _connectCallback;
+
+		public void Connect(string ip, int port, Action<UvArgs> callback = null)
+		{
+			this.Connect(TcpSocket.AllocSocketAddress(new IPEndPoint(IPAddress.Parse(ip), port), this.Loop), callback);
+		}
+
+		public void Connect(IPEndPoint endpoint, Action<UvArgs> callback = null)
+		{
+			this.Connect(TcpSocket.AllocSocketAddress(endpoint, this.Loop), callback);
+		}
+
+		public void Connect(IntPtr address, Action<UvArgs> callback = null)
+		{
+			try
+			{
+				_address = address;
+				CheckError(Uvi.uv_tcp_connect(this.Connection, this.Handle, _address, _connectDelegate));
+				this.Status = HandleStatus.Opening;
+				_connectCallback = new UvCallback(this, callback);
+			}
+			catch (Exception)
+			{
+				_address = Free(_address);
+				_connectCallback = null;
+				throw;
+			}
 		}
 
 		private void OnConnect(IntPtr connection, int status)
 		{
-            var callback = _connectCallback;
-            _connectCallback = null;
+			var callback = _connectCallback;
+			_connectCallback = null;
 
 			this.Status = status == 0 ? HandleStatus.Open : HandleStatus.Closed;
-            callback.Invoke(status, this.OnConnect, this.Connected);
+			callback.Invoke(status, this.OnConnect, this.Connected);
 		}
 
 		protected virtual void OnConnect(UvArgs args)
@@ -172,7 +172,7 @@ namespace SharpUV
 
 			base.Dispose(disposing);
 
-            _address = Free(_address);
+			_address = Free(_address);
 		}
 	}
 
@@ -183,7 +183,7 @@ namespace SharpUV
 		{
 			this.Server = server;
 			this.Accept();
-            this.Status = HandleStatus.Open;
+			this.Status = HandleStatus.Open;
 		}
 
 		private void Accept()
@@ -207,27 +207,27 @@ namespace SharpUV
 			CheckError(Uvi.uv_tcp_init(this.Loop.Handle, this.Handle));
 		}
 
-        internal static IntPtr AllocSocketAddress(IPEndPoint endpoint, Loop loop)
-        {
-            IntPtr ret;
+		internal static IntPtr AllocSocketAddress(IPEndPoint endpoint, Loop loop)
+		{
+			IntPtr ret;
 
-            switch (endpoint.AddressFamily)
-            {
-                case AddressFamily.InterNetwork:
-                    ret = loop.Allocs.Alloc(Uvi.sockaddr_in_size);
-                    loop.CheckError(Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port, ret));
-                    break;
+			switch (endpoint.AddressFamily)
+			{
+				case AddressFamily.InterNetwork:
+					ret = loop.Allocs.Alloc(Uvi.sockaddr_in_size);
+					loop.CheckError(Uvi.uv_ip4_addr(endpoint.Address.ToString(), endpoint.Port, ret));
+					break;
 
-                case AddressFamily.InterNetworkV6:
-                    ret = loop.Allocs.Alloc(Uvi.sockaddr_in6_size);
-                    loop.CheckError(Uvi.uv_ip6_addr(endpoint.Address.ToString(), endpoint.Port, ret));
-                    break;
+				case AddressFamily.InterNetworkV6:
+					ret = loop.Allocs.Alloc(Uvi.sockaddr_in6_size);
+					loop.CheckError(Uvi.uv_ip6_addr(endpoint.Address.ToString(), endpoint.Port, ret));
+					break;
 
-                default:
-                    throw new ArgumentException(String.Format("AddressFamily {0} not supported", endpoint.AddressFamily));
-            }
+				default:
+					throw new ArgumentException(String.Format("AddressFamily {0} not supported", endpoint.AddressFamily));
+			}
 
-            return ret;
-        }
+			return ret;
+		}
 	}
 }

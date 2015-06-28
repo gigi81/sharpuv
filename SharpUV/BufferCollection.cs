@@ -50,7 +50,7 @@ namespace SharpUV
         internal byte[] CopyAndDeleteBuffer(IntPtr buf, int size, byte[] dest = null)
         {
             var data = (uv_buf_t) Marshal.PtrToStructure(buf, typeof (uv_buf_t));
-            return CopyAndDeleteBuffer(data, size);
+            return CopyAndDeleteBuffer(data, size, dest);
         }
 
         internal byte[] CopyAndDeleteBuffer(uv_buf_t buf, int size, byte[] dest = null)
@@ -82,6 +82,11 @@ namespace SharpUV
 			return this.Create(reqType, BufferCollection.EmptyBuffer);
 		}
 
+        internal IntPtr Create(uv_req_type reqType, uint length)
+        {
+            return Create(reqType, _buffer.CreateBuffer(length));
+        }
+
 		internal IntPtr Create(uv_req_type reqType, byte[] data, int offset, int length)
 		{
 			return Create(reqType, _buffer.CreateBuffer(data, offset, length));
@@ -111,6 +116,17 @@ namespace SharpUV
             _buffer.DeleteBuffer(_writes[requestHandle]);
             _loop.Allocs.Free(requestHandle);
             _writes.Remove(requestHandle);
+        }
+
+        internal byte[] CopyAndDelete(IntPtr requestHandle, int size)
+        {
+            if (requestHandle == IntPtr.Zero)
+                return new byte[0];
+
+            var data = _buffer.CopyAndDeleteBuffer(_writes[requestHandle], size);
+            _loop.Allocs.Free(requestHandle);
+            _writes.Remove(requestHandle);
+            return data;
         }
 
         internal uv_buf_t this[IntPtr ptr]

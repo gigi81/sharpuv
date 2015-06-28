@@ -220,8 +220,7 @@ namespace Libuv
 			uv_file file,
 			uv_buf_t[] bufs,
 			int nbufs,
-			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.OffTMarshaler")]
-			OffT offset,
+            long offset,
 			uv_fs_cb cb
 		);
 

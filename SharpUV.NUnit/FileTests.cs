@@ -14,22 +14,36 @@ namespace SharpUV.NUnit
 		}
 
 		[Test]
-		public void CreateFileAndWriteToIt()
+		public void WriteAndReadFile()
 		{
-			var handle = new WriteFileHandle();
+			const string data = "test string";
+
+			var handle = new WriteFileHandle(data);
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
 			Loop.Default.Run();
 
-			Assert.AreEqual(System.IO.File.ReadAllText(TestFilePath), "test");
+            var handle2 = new ReadFileHandle();
+            handle2.Open(TestFilePath, FileAccessMode.ReadOnly, FileOpenMode.OnlyIfExists, FilePermissions.S_IRUSR);
+
+            Loop.Default.Run();
+
+			Assert.AreEqual(data, handle2.Content);
 		}
 
 		internal class WriteFileHandle : FileHandle
 		{
+			private string _data;
+
+			public WriteFileHandle(string data)
+			{
+				_data = data;
+			}
+
 			protected override void OnOpen(UvArgs args)
 			{
 				args.Throw ();
-				this.Write(Encoding.UTF8.GetBytes("test"));
+				this.Write(Encoding.UTF8.GetBytes(_data));
 			}
 
 			protected override void OnWrite(UvDataArgs args)
@@ -43,6 +57,34 @@ namespace SharpUV.NUnit
 				args.Throw ();
 			}
 		}
+
+        internal class ReadFileHandle : FileHandle
+        {
+			byte[] _data;
+
+            public string Content
+            {
+                get { return Encoding.UTF8.GetString(_data); }
+            }
+
+            protected override void OnOpen(UvArgs args)
+            {
+                args.Throw();
+                this.Read();
+            }
+
+            protected override void OnRead(UvDataArgs args)
+            {
+                args.Throw();
+                _data = args.Data;
+                this.Close();
+            }
+
+            protected override void OnClose(UvArgs args)
+            {
+                args.Throw();
+            }
+        }
 	}
 }
 

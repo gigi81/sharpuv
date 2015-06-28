@@ -67,6 +67,11 @@ namespace SharpUV
 		{
 			get { return _data; }
 		}
+
+        public int Length
+        {
+            get { return this.Code; }
+        }
 	}
 
     public class UvStatArgs : UvArgs

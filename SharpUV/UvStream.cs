@@ -28,8 +28,8 @@ namespace SharpUV
 {
 	public class UvStream : UvHandle
 	{
-		public event EventHandler<UvDataArgs> OnReadData;
-		public event EventHandler<UvDataArgs> OnWriteData;
+		public event EventHandler<UvDataArgs> DataRead;
+		public event EventHandler<UvDataArgs> DataWrite;
 		public event EventHandler<UvArgs> ShuttedDown;
 
 		private bool _isReading = false;
@@ -98,21 +98,14 @@ namespace SharpUV
 
 		private void OnAlloc(IntPtr tcp, SizeT size, IntPtr buf)
 		{
-			try
-			{
-				this.Loop.Buffers.AllocBuffer(buf, (uint)size.Value);
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Buffer allocation failed with error: {0}", ex.Message);
-			}
+			this.Loop.Buffers.AllocBuffer(buf, (uint)size.Value);
 		}
 
 		private void OnRead(IntPtr stream, int nread, IntPtr buf)
 		{
 			var data = this.Loop.Buffers.CopyAndDeleteBuffer(buf, (int)nread);
 			if (_readCallback != null)
-				_readCallback.Invoke(new UvDataArgs((int)nread, data), this.OnRead, this.OnReadData);
+				_readCallback.Invoke(new UvDataArgs((int)nread, data), this.OnRead, this.DataRead);
 
 			if (nread < 0)
 				this.Close();
@@ -156,7 +149,7 @@ namespace SharpUV
 			_writeCallback = null;
 
 			this.Loop.Requests.Delete(requestHandle);
-			callback.Invoke(status, this.OnWrite, this.OnWriteData);
+			callback.Invoke(status, this.OnWrite, this.DataWrite);
 		}
 
 		public void Shutdown(Action<UvArgs> callback = null)

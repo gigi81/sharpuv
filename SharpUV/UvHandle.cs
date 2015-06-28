@@ -31,10 +31,10 @@ namespace SharpUV
 	/// </summary>
 	public enum HandleStatus
 	{
+		Closed = 0,
         Opening,
 		Open,
 		Closing,
-		Closed,
         Resolving
 	}
 

@@ -213,6 +213,9 @@ namespace Libuv
 	internal delegate void uv_watcher_cb(IntPtr watcher, int status);
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	internal delegate void uv_timer_cb(IntPtr timer);
+
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void uv_exit_cb(IntPtr handle, int exit_status, int term_signal); // uv_process_t*
 
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]

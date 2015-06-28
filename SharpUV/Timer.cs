@@ -33,6 +33,8 @@ namespace SharpUV
 		private TimeSpan _repeat;
         private Action _callback;
 
+		private uv_timer_cb _tick;
+
 		public Timer()
 			: this(Loop.Default)
 		{
@@ -42,6 +44,7 @@ namespace SharpUV
 			: base(loop, uv_handle_type.UV_TIMER)
 		{
 			CheckError(Uvi.uv_timer_init(this.Loop.Handle, this.Handle));
+			_tick = new uv_timer_cb(this.OnTick);
 		}
 
 		public TimeSpan Delay { get; set; }
@@ -59,9 +62,16 @@ namespace SharpUV
 			}
 		}
 
+		public void Start(TimeSpan delay, TimeSpan repeat, Action callback = null)
+		{
+			this.Delay = delay;
+			this.Repeat = repeat;
+			this.Start(callback);
+		}
+
 		public void Start(Action callback = null)
 		{
-			CheckError(Uvi.uv_timer_start(this.Handle, this.OnTick, this.Delay.TotalMilliseconds, this.Repeat.TotalMilliseconds));
+			CheckError(Uvi.uv_timer_start(this.Handle, _tick, (long)this.Delay.TotalMilliseconds, (long)this.Repeat.TotalMilliseconds));
             _callback = callback;
 		}
 
@@ -76,7 +86,7 @@ namespace SharpUV
 			CheckError(Uvi.uv_timer_again(this.Handle));
 		}
 
-		private void OnTick(IntPtr watcher, int status)
+		private void OnTick(IntPtr timer)
 		{
 			this.OnTick();
 

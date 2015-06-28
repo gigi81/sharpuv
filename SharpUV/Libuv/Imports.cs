@@ -93,7 +93,7 @@ namespace Libuv
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_timer_init(IntPtr loop, IntPtr timer); // uv_loop_t*, uv_timer_t*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_timer_start(IntPtr timer, uv_watcher_cb cb, double after, double repeat); // uv_timer_t*
+		internal static extern int uv_timer_start(IntPtr timer, uv_timer_cb cb, long after, long repeat); // uv_timer_t*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_timer_stop(IntPtr timer); // uv_timer_t*
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]

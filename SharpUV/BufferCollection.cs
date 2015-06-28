@@ -47,91 +47,21 @@ namespace SharpUV
                 buffer.data = _loop.BufferManager.Free(buffer.data);
         }
 
-        internal byte[] CopyAndDeleteBuffer(IntPtr buf, int size, byte[] dest = null)
+        internal byte[] CopyAndDeleteBuffer(IntPtr buf, int size)
         {
             var data = (uv_buf_t) Marshal.PtrToStructure(buf, typeof (uv_buf_t));
-            return CopyAndDeleteBuffer(data, size, dest);
+            return CopyAndDeleteBuffer(data, size);
         }
 
-        internal byte[] CopyAndDeleteBuffer(uv_buf_t buf, int size, byte[] dest = null)
+        internal byte[] CopyAndDeleteBuffer(uv_buf_t buf, int size)
         {
-            byte[] data = dest ?? new byte[size > 0 ? size : 0];
+            byte[] data = new byte[size > 0 ? size : 0];
 
             if (size > 0)
                 Marshal.Copy(buf.data, data, 0, size);
 
             this.DeleteBuffer(buf);
             return data;
-        }
-    }
-
-    internal class RequestCollection
-    {
-        private readonly Loop _loop;
-        private readonly BufferCollection _buffer;
-        private readonly Dictionary<IntPtr, uv_buf_t> _writes = new Dictionary<IntPtr, uv_buf_t>();
-
-        internal RequestCollection(Loop loop, BufferCollection buffer)
-        {
-            _loop = loop;
-            _buffer = buffer;
-        }
-
-		internal IntPtr Create(uv_req_type reqType)
-		{
-			return this.Create(reqType, BufferCollection.EmptyBuffer);
-		}
-
-        internal IntPtr Create(uv_req_type reqType, uint length)
-        {
-            return Create(reqType, _buffer.CreateBuffer(length));
-        }
-
-		internal IntPtr Create(uv_req_type reqType, byte[] data, int offset, int length)
-		{
-			return Create(reqType, _buffer.CreateBuffer(data, offset, length));
-		}
-
-		private IntPtr Create(uv_req_type reqType, uv_buf_t buffer)
-        {
-            var requestHandle = _loop.Allocs.Alloc(Uvi.uv_req_size(reqType));
-
-            uv_req_t request = new uv_req_t()
-            {
-                type = reqType,
-                data = buffer.data
-            };
-
-            Marshal.StructureToPtr(request, requestHandle, false);
-
-            _writes.Add(requestHandle, buffer);
-            return requestHandle;
-        }
-
-        internal void Delete(IntPtr requestHandle)
-        {
-			if (requestHandle == IntPtr.Zero)
-				return;
-
-            _buffer.DeleteBuffer(_writes[requestHandle]);
-            _loop.Allocs.Free(requestHandle);
-            _writes.Remove(requestHandle);
-        }
-
-        internal byte[] CopyAndDelete(IntPtr requestHandle, int size)
-        {
-            if (requestHandle == IntPtr.Zero)
-                return new byte[0];
-
-            var data = _buffer.CopyAndDeleteBuffer(_writes[requestHandle], size);
-            _loop.Allocs.Free(requestHandle);
-            _writes.Remove(requestHandle);
-            return data;
-        }
-
-        internal uv_buf_t this[IntPtr ptr]
-        {
-            get { return _writes[ptr]; }
         }
     }
 }

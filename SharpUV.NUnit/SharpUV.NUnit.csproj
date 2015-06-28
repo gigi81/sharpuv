@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="FileTests.cs" />
     <Compile Include="TcpClientTests.cs" />
+    <Compile Include="WorkTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -56,6 +57,6 @@
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
-	<Copy SourceFiles="$(SolutionDir)lib\libuv.dll" DestinationFolder="$(TargetDir)" />
+    <Copy SourceFiles="$(SolutionDir)lib\libuv.dll" DestinationFolder="$(TargetDir)" />
   </Target>
 </Project>

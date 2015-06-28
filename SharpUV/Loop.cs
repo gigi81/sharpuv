@@ -83,7 +83,7 @@ namespace SharpUV
 			get { return DefaultLoop; }
 		}
 
-        public void QueueWork(Action run, Action after)
+        public void QueueWork(Action run, Action after = null)
         {
             this.Works.Add(new LoopWork(this, run, after, this.WorkCompleted));
         }

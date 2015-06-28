@@ -29,6 +29,7 @@ namespace SharpUV.NUnit
             Loop.Default.Run();
 
 			Assert.AreEqual(data, handle2.Content);
+			Assert.AreEqual(Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
 		}
 
 		internal class WriteFileHandle : FileHandle

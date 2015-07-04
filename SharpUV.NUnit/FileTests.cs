@@ -50,6 +50,25 @@ namespace SharpUV.NUnit
 			Loop.Default.Run();
 		}
 
+		[Test]
+		public void DeleteFile()
+		{
+			const string data = "test string";
+
+			var handle = new WriteFileHandle(data);
+			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+
+			Loop.Default.Run();
+
+			var handle2 = new FileHandle();
+			handle2.Delete(TestFilePath, (args) =>
+			{
+				Assert.IsTrue(args.Successful);
+			});
+
+			Loop.Default.Run();
+		}
+
 		internal class WriteFileHandle : FileHandle
 		{
 			private string _data;

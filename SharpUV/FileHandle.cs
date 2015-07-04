@@ -88,6 +88,7 @@ namespace SharpUV
         public event EventHandler<UvArgs> DirectoryCreated;
         public event EventHandler<UvArgs> DirectoryRemoved;
 		public event EventHandler<UvStatArgs> DataStat;
+		public event EventHandler<UvArgs> Deleted;
 
 		private FileHandleStatus _status = FileHandleStatus.Closed;
 		private int _file = 0;
@@ -117,6 +118,7 @@ namespace SharpUV
         private uv_fs_cb _mkdirDelegate;
         private uv_fs_cb _rmdirDelegate;
 		private uv_fs_cb _statDelegate;
+		private uv_fs_cb _deleteDelegate;
 
 		private void InitDelegates ()
 		{
@@ -127,6 +129,8 @@ namespace SharpUV
             _mkdirDelegate = new uv_fs_cb(this.OnCreateDirectory);
             _rmdirDelegate = new uv_fs_cb(this.OnRemoveDirectory);
 			_statDelegate = new uv_fs_cb(this.OnStat);
+			_deleteDelegate = new uv_fs_cb(this.OnDelete);
+
 		}
 		#endregion
 
@@ -342,27 +346,27 @@ namespace SharpUV
 		{
 		}
 
-		internal void CheckError(int code)
+		private void CheckError(int code)
 		{
 			this.Loop.CheckError(code);
 		}
 
-		internal IntPtr CreateRequest()
+		private IntPtr CreateRequest()
 		{
 			return this.Loop.Requests.Create(uv_req_type.UV_FS);
 		}
 
-        internal IntPtr CreateRequest(uint length)
+		private IntPtr CreateRequest(uint length)
         {
             return this.Loop.Requests.Create(uv_req_type.UV_FS, length);
         }
 
-		internal IntPtr CreateRequest(byte[] data, int offset, int length)
+		private IntPtr CreateRequest(byte[] data, int offset, int length)
 		{
 			return this.Loop.Requests.Create(uv_req_type.UV_FS, data, offset, length);
 		}
 
-		internal uv_file FreeRequest(IntPtr req)
+		private uv_file FreeRequest(IntPtr req)
 		{
 			if (req == IntPtr.Zero)
 				return 0;
@@ -373,7 +377,7 @@ namespace SharpUV
 			return ret;
 		}
 
-        internal UvDataArgs FreeReadRequest(IntPtr req)
+		private UvDataArgs FreeReadRequest(IntPtr req)
         {
             if (req == IntPtr.Zero)
                 return new UvDataArgs(-1, new byte[0]);
@@ -384,7 +388,7 @@ namespace SharpUV
             return new UvDataArgs(ret, data);
         }
 
-		internal UvStatArgs FreeStatRequest(IntPtr req)
+		private UvStatArgs FreeStatRequest(IntPtr req)
 		{
 			if (req == IntPtr.Zero)
 				return new UvStatArgs(0, IntPtr.Zero);
@@ -491,6 +495,37 @@ namespace SharpUV
 		}
 
 		protected virtual void OnStat(UvStatArgs args)
+		{
+		}
+
+		private UvCallback _deleteCallback;
+
+		public void Delete(string path, Action<UvArgs> callback = null)
+		{
+			IntPtr req = IntPtr.Zero;
+
+			try
+			{
+				req = this.CreateRequest();
+				CheckError(Uvi.uv_fs_unlink(this.Loop.Handle, req, path, _deleteDelegate));
+				_deleteCallback = new UvCallback(this, callback);
+			}
+			catch (Exception)
+			{
+				this.FreeRequest(req);
+				throw;
+			}
+		}
+
+		private void OnDelete(IntPtr req)
+		{
+			var callback = _deleteCallback;
+			_deleteCallback = null;
+
+			callback.Invoke(this.FreeRequest(req), this.OnDelete, this.Deleted);
+		}
+
+		protected virtual void OnDelete(UvArgs args)
 		{
 		}
 

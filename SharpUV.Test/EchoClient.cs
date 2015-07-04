@@ -62,7 +62,7 @@ namespace SharpUV.Test
 
 		protected override void OnRead(UvDataArgs args)
 		{
-            if(args.IsSuccesful)
+            if(args.Successful)
             {
                 this.Checker.Received(args.Data);
                 if (this.SkipCheck)

@@ -272,6 +272,17 @@ namespace Libuv
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_stat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="loop">(uv_loop_t*)</param>
+		/// <param name="req">(uv_fs_t*)</param>
+		/// <param name="path"></param>
+		/// <param name="cb"></param>
+		/// <returns></returns>
+		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_unlink(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+
 		#endregion
 
         #region Threading

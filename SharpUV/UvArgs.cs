@@ -15,7 +15,7 @@ namespace SharpUV
 				_exception = new UvException (error);
 		}
 
-		public bool IsSuccesful
+		public bool Successful
 		{
 			get { return _error >= 0; }
 		}

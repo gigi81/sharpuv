@@ -32,7 +32,7 @@ namespace SharpUV.NUnit
 
             client.Resolve(host, port.ToString(), (args1) =>
             {
-                if (!args1.IsSuccesful)
+                if (!args1.Successful)
                 {
                     Console.WriteLine("failed to resolve host {0}", host);
                     return;
@@ -42,7 +42,7 @@ namespace SharpUV.NUnit
 
                 client.Connect(args1.Data[0], (args2) =>
                 {
-                    if (!args2.IsSuccesful)
+                    if (!args2.Successful)
                     {
                         Console.WriteLine("connection failed");
                         return;
@@ -52,7 +52,7 @@ namespace SharpUV.NUnit
 
                     client.Close(false, (args3) =>
                     {
-                        if (!args3.IsSuccesful)
+                        if (!args3.Successful)
                         {
                             Console.WriteLine("failed to close connection");
                             return;
@@ -109,7 +109,7 @@ namespace SharpUV.NUnit
 
         protected override void OnConnect(UvArgs args)
         {
-            if(!args.IsSuccesful)
+            if(!args.Successful)
             {
                 var endpoint = this.GetNextEndPoint();
                 if(endpoint != null)
@@ -177,7 +177,7 @@ namespace SharpUV.NUnit
 
         protected bool Check(UvArgs args)
         {
-            if (args.IsSuccesful)
+            if (args.Successful)
                 return true;
 
             try

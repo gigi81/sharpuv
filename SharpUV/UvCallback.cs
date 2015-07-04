@@ -3,28 +3,21 @@ using System.Net;
 
 namespace SharpUV
 {
-	internal abstract class UvCallback<TArgs> where TArgs : UvArgs
+	internal class UvCallback<TArgs> where TArgs : UvArgs
 	{
-        private readonly object _parent;
+        protected readonly object _sender;
 		protected Action<TArgs> _callback;
 
 		protected UvCallback(object sender, Action<TArgs> callback)
 		{
+			_sender = sender;
 			_callback = callback;
-            _parent = sender;
 		}
-
-		protected abstract TArgs CreateArgs(int code);
 
 	    internal Action<TArgs> Callback
 	    {
             get { return _callback; }
 	    }
-
-		public void Invoke(int code, Action<TArgs> callback, EventHandler<TArgs> handler)
-		{
-			this.Invoke(this.CreateArgs(code), callback, handler);
-		}
 
 		protected void Invoke(TArgs args, Action<TArgs> callback, EventHandler<TArgs> handler)
 		{
@@ -35,41 +28,54 @@ namespace SharpUV
 				_callback.Invoke(args);
 
 			if (handler != null)
-				handler(_parent, args);
+				handler(_sender, args);
 		}
 	}
 
-	internal class UvCallback : UvCallback<UvArgs>
+	internal sealed class UvCallback : UvCallback<UvArgs>
 	{
 		internal UvCallback(object sender, Action<UvArgs> callback)
 			: base(sender, callback)
 		{
 		}
 
-		protected override UvArgs CreateArgs (int code)
+		public void Invoke(int code, Action<UvArgs> callback, EventHandler<UvArgs> handler)
 		{
-			return new UvArgs(code);
+			this.Invoke(new UvArgs(code), callback, handler);
 		}
 	}
 
-	internal class UvDataCallback : UvCallback<UvDataArgs>
+	internal sealed class UvDataCallback : UvCallback<UvDataArgs>
 	{
 		private byte[] _data;
 
 		internal UvDataCallback(object sender, Action<UvDataArgs> callback, byte[] data = null)
 			: base(sender, callback)
 		{
-			_data = data;
+			_data = null;
 		}
 
-		protected override UvDataArgs CreateArgs (int code)
+		public void Invoke(int code, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
 		{
-			return new UvDataArgs(code, _data);
+			base.Invoke(new UvDataArgs(code, _data), callback, handler);
 		}
 
-        public void Invoke(UvDataArgs args, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
+        public new void Invoke(UvDataArgs args, Action<UvDataArgs> callback, EventHandler<UvDataArgs> handler)
         {
 			base.Invoke(args, callback, handler);
         }
+	}
+
+	internal sealed class UvStatCallback : UvCallback<UvStatArgs>
+	{
+		internal UvStatCallback(object sender, Action<UvStatArgs> callback)
+			: base(sender, callback)
+		{
+		}
+
+		public new void Invoke(UvStatArgs args, Action<UvStatArgs> callback, EventHandler<UvStatArgs> handler)
+		{
+			base.Invoke(args, callback, handler);
+		}
 	}
 }

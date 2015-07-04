@@ -54,7 +54,7 @@
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Libuv\Imports.cs" />
     <Compile Include="Libuv\SSizeT.cs" />
-    <Compile Include="Libuv\UvStat.cs" />
+    <Compile Include="UvStat.cs" />
     <Compile Include="Loop.cs" />
     <Compile Include="LoopAllocs.cs" />
     <Compile Include="LoopWork.cs" />

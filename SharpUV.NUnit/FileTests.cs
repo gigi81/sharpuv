@@ -32,6 +32,24 @@ namespace SharpUV.NUnit
 			Assert.AreEqual(Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
 		}
 
+		[Test]
+		public void StatFile()
+		{
+			const string data = "test string";
+
+			var handle = new WriteFileHandle(data);
+			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+
+			Loop.Default.Run();
+
+			var handle2 = new FileHandle();
+			handle2.Stat(TestFilePath, (args) => {
+				Assert.AreEqual(data.Length, args.Stat.st_size);
+			});
+
+			Loop.Default.Run();
+		}
+
 		internal class WriteFileHandle : FileHandle
 		{
 			private string _data;

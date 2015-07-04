@@ -181,6 +181,14 @@ namespace Libuv
 		/// <summary>
 		/// 
 		/// </summary>
+		/// <param name="req">(uv_fs_t*)</param>
+		/// <returns>(uv_stat_t*)</returns>
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr uv_fs_req_stat(IntPtr req);
+
+		/// <summary>
+		/// 
+		/// </summary>
 		/// <param name="loop">(uv_loop_t*)</param>
 		/// <param name="req">(uv_fs_t*)</param>
 		/// <param name="path"></param>
@@ -214,15 +222,7 @@ namespace Libuv
 		/// <param name="cb"></param>
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_fs_read(
-			IntPtr loop,
-			IntPtr req,
-			uv_file file,
-			uv_buf_t[] bufs,
-			int nbufs,
-            long offset,
-			uv_fs_cb cb
-		);
+		internal static extern int uv_fs_read(IntPtr loop, IntPtr req, uv_file file, uv_buf_t[] bufs, int nbufs, long offset, uv_fs_cb cb);
 
 		/// <summary>
 		/// 
@@ -236,15 +236,7 @@ namespace Libuv
 		/// <param name="cb"></param>
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_fs_write(
-			IntPtr loop,
-			IntPtr req,
-			uv_file file,
-			uv_buf_t[] bufs,
-			int nbufs,
-			long offset,
-			uv_fs_cb cb
-		);
+		internal static extern int uv_fs_write(IntPtr loop, IntPtr req, uv_file file, uv_buf_t[] bufs, int nbufs, long offset, uv_fs_cb cb);
 
 		/// <summary>
 		/// 
@@ -268,6 +260,17 @@ namespace Libuv
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_rmdir(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="loop">(uv_loop_t*)</param>
+		/// <param name="req">(uv_fs_t*)</param>
+		/// <param name="path"></param>
+		/// <param name="cb"></param>
+		/// <returns></returns>
+		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_stat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
 
 		#endregion
 

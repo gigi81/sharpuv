@@ -87,6 +87,7 @@ namespace SharpUV
         public event EventHandler<UvDataArgs> DataWrite;
         public event EventHandler<UvArgs> DirectoryCreated;
         public event EventHandler<UvArgs> DirectoryRemoved;
+		public event EventHandler<UvStatArgs> DataStat;
 
 		private FileHandleStatus _status = FileHandleStatus.Closed;
 		private int _file = 0;
@@ -115,6 +116,7 @@ namespace SharpUV
 		private uv_fs_cb _writeDelegate;
         private uv_fs_cb _mkdirDelegate;
         private uv_fs_cb _rmdirDelegate;
+		private uv_fs_cb _statDelegate;
 
 		private void InitDelegates ()
 		{
@@ -124,6 +126,7 @@ namespace SharpUV
 			_writeDelegate = new uv_fs_cb(this.OnWrite);
             _mkdirDelegate = new uv_fs_cb(this.OnCreateDirectory);
             _rmdirDelegate = new uv_fs_cb(this.OnRemoveDirectory);
+			_statDelegate = new uv_fs_cb(this.OnStat);
 		}
 		#endregion
 
@@ -381,6 +384,18 @@ namespace SharpUV
             return new UvDataArgs(ret, data);
         }
 
+		internal UvStatArgs FreeStatRequest(IntPtr req)
+		{
+			if (req == IntPtr.Zero)
+				return new UvStatArgs(0, IntPtr.Zero);
+
+			var ret = Uvi.uv_fs_req_result(req);
+			var stat = UvStat.Create(ret == 0 ? Uvi.uv_fs_req_stat(req) : IntPtr.Zero);
+			Uvi.uv_fs_req_cleanup(req);
+			this.Loop.Requests.Delete(req);
+			return new UvStatArgs(ret, stat);
+		}
+
         private UvCallback _mkdirCallback;
 
         public void CreateDirectory(string path, Action<UvArgs> callback = null)
@@ -448,10 +463,36 @@ namespace SharpUV
         {
         }
 
+		private UvStatCallback _statCallback;
+
         public void Stat(string path, Action<UvStatArgs> callback = null)
         {
+			IntPtr req = IntPtr.Zero;
 
+			try
+			{
+				req = this.CreateRequest();
+				CheckError(Uvi.uv_fs_stat(this.Loop.Handle, req, path, _statDelegate));
+				_statCallback = new UvStatCallback(this, callback);
+			}
+			catch (Exception)
+			{
+				this.FreeRequest(req);
+				throw;
+			}
         }
+
+		private void OnStat(IntPtr req)
+		{
+			var callback = _statCallback;
+			_statCallback = null;
+
+			callback.Invoke(this.FreeStatRequest(req), this.OnStat, this.DataStat);
+		}
+
+		protected virtual void OnStat(UvStatArgs args)
+		{
+		}
 
 		#region Dispose Management
 		/// <summary>

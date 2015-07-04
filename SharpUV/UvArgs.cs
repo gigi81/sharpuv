@@ -78,10 +78,15 @@ namespace SharpUV
     {
         private UvStat _stat;
 
-        public UvStatArgs(int error, IntPtr stat)
+		public UvStatArgs(int error, IntPtr stat)
+			: this(error, UvStat.Create(stat))
+		{
+		}
+
+		public UvStatArgs(int error, UvStat stat)
             : base(error)
         {
-            _stat = UvStat.Create(stat);
+            _stat = stat;
         }
 
         public UvStat Stat

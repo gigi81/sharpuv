@@ -5,6 +5,8 @@ namespace SharpUV
 {
 	public class UvArgs : EventArgs
 	{
+		public static readonly UvArgs UvEmpty = new UvArgs(0);
+
 		private int _error;
 		private UvException _exception;
 

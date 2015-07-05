@@ -28,7 +28,7 @@ using uv_file = System.Int32;
 
 namespace SharpUV
 {
-	public enum FileHandleStatus
+	public enum FileStatus
 	{
         Closed = 0,
 		Opening,
@@ -43,7 +43,7 @@ namespace SharpUV
         public event EventHandler<UvDataArgs> DataRead;
         public event EventHandler<UvDataArgs> DataWrite;
 
-		private FileHandleStatus _status = FileHandleStatus.Closed;
+		private FileStatus _status = FileStatus.Closed;
 		private int _file = 0;
 
 		public File()
@@ -54,7 +54,7 @@ namespace SharpUV
 		public File(Loop loop)
 		{
 			this.Loop = loop;
-			this.Status = FileHandleStatus.Closed;
+			this.Status = FileStatus.Closed;
 			this.InitDelegates();
 		}
 
@@ -86,7 +86,7 @@ namespace SharpUV
 		/// <summary>
 		/// Handle status
 		/// </summary>
-		public FileHandleStatus Status
+		public FileStatus Status
 		{
 			get { return _status; }
 			private set
@@ -95,16 +95,16 @@ namespace SharpUV
 
 				switch(value)
 				{
-					case FileHandleStatus.Open:
+					case FileStatus.Open:
 						GC.ReRegisterForFinalize(this);
 						break;
 
-					case FileHandleStatus.Opening:
-					case FileHandleStatus.Closing:
+					case FileStatus.Opening:
+					case FileStatus.Closing:
 						GC.ReRegisterForFinalize(this);
 						break;
 
-					case FileHandleStatus.Closed:
+					case FileStatus.Closed:
 						GC.SuppressFinalize(this);
 						break;
 				}
@@ -120,12 +120,12 @@ namespace SharpUV
 
         public void OpenWrite(string path, Action<UvArgs> callback = null)
         {
-            this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Truncate | FileOpenMode.BinaryMode, 0, callback);
+			this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate | FileOpenMode.BinaryMode, 0, callback);
         }
 
 		public void OpenAppend(string path, Action<UvArgs> callback = null)
 		{
-			this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Append | FileOpenMode.BinaryMode, 0, callback);
+			this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Append | FileOpenMode.BinaryMode, 0, callback);
 		}
 
 		public void Open(string path, FileAccessMode access, FileOpenMode mode, FilePermissions permissions, Action<UvArgs> callback = null)
@@ -133,7 +133,7 @@ namespace SharpUV
             if (this.IsDisposed)
                 throw new InvalidOperationException("Cannot open a stream after it has been disposed");
 
-            if (this.Status != FileHandleStatus.Closed)
+            if (this.Status != FileStatus.Closed)
                 throw new InvalidOperationException(String.Format("Cannot open a file handle when it's status is {0}", this.Status));
 
 			IntPtr req = IntPtr.Zero;
@@ -142,7 +142,7 @@ namespace SharpUV
 			{
 				req = this.CreateRequest();
 				CheckError(uv_fs_open(this.Loop, req, path, access, mode, permissions, _openDelegate));
-				this.Status = FileHandleStatus.Opening;
+				this.Status = FileStatus.Opening;
                 _openCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
@@ -163,7 +163,7 @@ namespace SharpUV
             _openCallback = null;
 
 			_file = this.FreeRequest(req);
-			this.Status = _file != -1 ? FileHandleStatus.Open : FileHandleStatus.Closed;
+			this.Status = _file != -1 ? FileStatus.Open : FileStatus.Closed;
             callback.Invoke(_file, this.OnOpen, this.Opened);
 		}
 
@@ -178,7 +178,7 @@ namespace SharpUV
 		/// </summary>
 		public void Close(Action<UvArgs> callback = null)
 		{
-            if (this.Status != FileHandleStatus.Open)
+            if (this.Status != FileStatus.Open)
                 throw new InvalidOperationException(String.Format("Cannot close the file handle while the status is {0}", this.Status));
 
 			IntPtr req = IntPtr.Zero;
@@ -187,7 +187,7 @@ namespace SharpUV
 			{
 				req = this.CreateRequest();
 				CheckError(Uvi.uv_fs_close(this.Loop.Handle, req, _file, _closeDelegate));
-				this.Status = FileHandleStatus.Closing;
+				this.Status = FileStatus.Closing;
                 _closeCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
@@ -204,7 +204,7 @@ namespace SharpUV
 
 			_file = this.FreeRequest(req);
 			if(_file != -1)
-				this.Status = FileHandleStatus.Closed;
+				this.Status = FileStatus.Closed;
 
 			this.Dispose(false);
             callback.Invoke(_file, this.OnClose, this.Closed);
@@ -226,7 +226,7 @@ namespace SharpUV
 		/// </summary>
 		public void Read(uint length, Action<UvDataArgs> callback = null)
 		{
-			if (this.Status != FileHandleStatus.Open)
+			if (this.Status != FileStatus.Open)
 				throw new InvalidOperationException("File handle must be open in order to read data");
 
 			IntPtr req = IntPtr.Zero;
@@ -265,7 +265,7 @@ namespace SharpUV
 
 		public void Write(byte[] data, int offset, int length, Action<UvDataArgs> callback = null)
 		{
-			if (this.Status != FileHandleStatus.Open)
+			if (this.Status != FileStatus.Open)
 				throw new InvalidOperationException("File handle must be open in order to write data");
 
 			IntPtr req = IntPtr.Zero;
@@ -342,7 +342,7 @@ namespace SharpUV
 		/// </summary>
 		public void Dispose()
 		{
-            if (this.Status != FileHandleStatus.Closed)
+            if (this.Status != FileStatus.Closed)
                 this.Close(); //it will call dispose on the close callback
             else
                 this.Dispose(true);

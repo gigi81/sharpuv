@@ -14,11 +14,11 @@ namespace SharpUV
 		private readonly Action _afterAction;
 		private readonly Action<LoopWork> _completed;
 		private readonly Loop _loop;
-		private readonly IntPtr _work;
+		private IntPtr _work;
 
 		private bool _disposed = false;
 
-		public LoopWork(Loop loop, Action run, Action after, Action<LoopWork> completed)
+		internal LoopWork(Loop loop, Action run, Action after, Action<LoopWork> completed)
 		{
 			_run = new uv_work_cb(this.Run);
 			_after = new uv_after_work_cb(this.After);
@@ -54,7 +54,19 @@ namespace SharpUV
 			}
 			finally
 			{
-				_completed(this);
+				this.Completed();
+			}
+		}
+
+		private void Completed()
+		{
+			try
+			{
+				if (_completed != null)
+					_completed(this);
+			}
+			finally
+			{
 				this.Dispose();
 			}
 		}
@@ -66,7 +78,7 @@ namespace SharpUV
 			if (_disposed)
 				return;
 
-			_loop.Requests.Delete(_work);
+			_work = _loop.Requests.Delete(_work);
 			_disposed = true;
 		}
 

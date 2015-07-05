@@ -12,6 +12,7 @@ namespace SharpUV
 		public event EventHandler<UvArgs> DirectoryRemoved;
 		public event EventHandler<UvStatArgs> DataStat;
 		public event EventHandler<UvArgs> Deleted;
+		public event EventHandler<UvArgs> Copied;
 
 		public Filesystem()
 			: this(Loop.Current)
@@ -170,6 +171,29 @@ namespace SharpUV
 		}
 
 		protected virtual void OnDelete(UvArgs args)
+		{
+		}
+
+		private FileCopy _copy;
+		private UvCallback _copyCallback;
+
+		public void Copy(string source, string destination, Action<UvArgs> callback = null)
+		{
+			_copy = new FileCopy(source, destination, this.OnCopyInternal);
+			_copyCallback = new UvCallback(this, callback);
+		}
+
+		private void OnCopyInternal(UvArgs args)
+		{
+			var callback = _copyCallback;
+			_copyCallback = null;
+			var copy = _copy;
+			_copy = null;
+
+			callback.Invoke(args.Code, this.OnCopy, this.Copied);
+		}
+
+		protected virtual void OnCopy(UvArgs args)
 		{
 		}
 

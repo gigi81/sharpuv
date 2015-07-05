@@ -19,18 +19,17 @@ namespace SharpUV.NUnit
 			const string data = "test string";
 
 			var handle = new WriteFileHandle(data);
-			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+			handle.OpenWrite(TestFilePath);
 
 			Loop.Current.Run();
 
             var handle2 = new ReadFileHandle();
-            handle2.Open(TestFilePath, FileAccessMode.ReadOnly, FileOpenMode.OnlyIfExists, FilePermissions.S_IRUSR);
+            handle2.OpenRead(TestFilePath);
 
             Loop.Current.Run();
 
 			Assert.AreEqual(data, handle2.Content);
-			Assert.AreEqual(0, Loop.Current.AllocatedBytes);
-			Assert.AreEqual(0, Loop.Current.AllocatedHandles);
+			this.CheckCurrentLoop();
 		}
 
 		[Test]
@@ -39,7 +38,7 @@ namespace SharpUV.NUnit
 			const string data = "test string";
 
 			var handle = new WriteFileHandle(data);
-			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+			handle.OpenWrite(TestFilePath);
 
 			Loop.Current.Run();
 
@@ -57,7 +56,7 @@ namespace SharpUV.NUnit
 			const string data = "test string";
 
 			var handle = new WriteFileHandle(data);
-			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
+			handle.OpenWrite(TestFilePath);
 
 			Loop.Current.Run();
 
@@ -68,6 +67,31 @@ namespace SharpUV.NUnit
 			});
 
 			Loop.Current.Run();
+		}
+
+		[Test]
+		public void CopyFile()
+		{
+			const string data = "test string";
+
+			var handle = new WriteFileHandle(data);
+			handle.OpenWrite(TestFilePath);
+
+			Loop.Current.Run();
+
+			var handle2 = new Filesystem();
+			handle2.Copy(TestFilePath, TestFilePath + "copy", (args) =>
+			{
+				Assert.IsTrue(args.Successful);
+			});
+
+			Loop.Current.Run();
+		}
+
+		private void CheckCurrentLoop()
+		{
+			Assert.AreEqual(0, Loop.Current.AllocatedBytes);
+			Assert.AreEqual(0, Loop.Current.AllocatedHandles);
 		}
 
 		internal class WriteFileHandle : File
@@ -81,19 +105,19 @@ namespace SharpUV.NUnit
 
 			protected override void OnOpen(UvArgs args)
 			{
-				args.Throw ();
+				args.Throw();
 				this.Write(Encoding.UTF8.GetBytes(_data));
 			}
 
 			protected override void OnWrite(UvDataArgs args)
 			{
-				args.Throw ();
+				args.Throw();
 				this.Close();
 			}
 
 			protected override void OnClose (UvArgs args)
 			{
-				args.Throw ();
+				args.Throw();
 			}
 		}
 

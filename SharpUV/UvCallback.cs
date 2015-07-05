@@ -21,12 +21,15 @@ namespace SharpUV
 
 		protected void Invoke(TArgs args, Action<TArgs> callback, EventHandler<TArgs> handler)
 		{
+			//first the internal callback (should be a virtual method inside the class)
 			if (callback != null)
 				callback.Invoke(args);
 
+			//then the external callback (the callback passed as parameter to the initial async method)
 			if (_callback != null)
 				_callback.Invoke(args);
 
+			//at last the event handler (the standard .NET event system)
 			if (handler != null)
 				handler(_sender, args);
 		}

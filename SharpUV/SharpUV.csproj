@@ -48,6 +48,7 @@
     <Compile Include="BufferManager.cs" />
     <Compile Include="Callbacks\UvEndPointsCallback.cs" />
     <Compile Include="Callbacks\UvTcpServerSocketCallback.cs" />
+    <Compile Include="FileCopy.cs" />
     <Compile Include="FileEnums.cs" />
     <Compile Include="File.cs" />
     <Compile Include="Filesystem.cs" />

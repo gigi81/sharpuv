@@ -48,12 +48,12 @@
     <Compile Include="BufferManager.cs" />
     <Compile Include="Callbacks\UvEndPointsCallback.cs" />
     <Compile Include="Callbacks\UvTcpServerSocketCallback.cs" />
+    <Compile Include="FileEnums.cs" />
     <Compile Include="FileHandle.cs" />
     <Compile Include="Libuv\AddrInfo.cs" />
     <Compile Include="Libuv\OffT.cs" />
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Libuv\Imports.cs" />
-    <Compile Include="Libuv\SSizeT.cs" />
     <Compile Include="UvStat.cs" />
     <Compile Include="Loop.cs" />
     <Compile Include="LoopAllocs.cs" />

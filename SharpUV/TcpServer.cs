@@ -83,7 +83,7 @@ namespace SharpUV
 		    }
 		    catch (Exception)
 		    {
-		        _address = Free(_address);
+		        _address = this.Loop.Allocs.Free(_address);
 		    }
 		}
 
@@ -126,7 +126,7 @@ namespace SharpUV
 				}
 			}
 
-            _address = Free(_address);
+            _address = this.Loop.Allocs.Free(_address);
 		}
 	}
 }

@@ -26,7 +26,7 @@ namespace SharpUV
 			_afterAction = after;
 			_completed = completed;
 			_loop = loop;
-			_work = _loop.Allocs.Alloc(Uvi.uv_req_size(uv_req_type.UV_WORK));
+			_work = _loop.Requests.Create(uv_req_type.UV_WORK);
 
 			try
 			{
@@ -34,7 +34,7 @@ namespace SharpUV
 			}
 			catch (Exception)
 			{
-				_work = _loop.Allocs.Free(_work);
+				_work = _loop.Requests.Delete(_work);
 				throw;
 			}
 		}
@@ -66,7 +66,7 @@ namespace SharpUV
 			if (_disposed)
 				return;
 
-			_loop.Allocs.Free(_work);
+			_loop.Requests.Delete(_work);
 			_disposed = true;
 		}
 

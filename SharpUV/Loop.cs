@@ -131,6 +131,8 @@ namespace SharpUV
 
         public ulong DeAllocatedBytes { get { return this.Allocs.DeAllocatedBytes; } }
 
+		public uint CurrentlyAllocatedHandles { get { return this.Allocs.CurrentlyAllocatedHandles; } }
+
         public int PendingWorks { get { return this.Works.Count; } }
 
         public void DumpAllocs()

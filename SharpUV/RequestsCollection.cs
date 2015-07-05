@@ -55,7 +55,7 @@ namespace SharpUV
 
 		private IntPtr Create(uv_req_type reqType, uv_buf_t buffer)
 		{
-			var requestHandle = _loop.Allocs.Alloc(Uvi.uv_req_size(reqType));
+			var requestHandle = _loop.Allocs.AllocRequest(reqType);
 
 			uv_req_t request = new uv_req_t()
 			{
@@ -69,14 +69,14 @@ namespace SharpUV
 			return requestHandle;
 		}
 
-		internal void Delete(IntPtr requestHandle)
+		internal IntPtr Delete(IntPtr requestHandle)
 		{
 			if (requestHandle == IntPtr.Zero)
-				return;
+				return requestHandle;
 
 			_buffer.DeleteBuffer(_writes[requestHandle]);
-			_loop.Allocs.Free(requestHandle);
 			_writes.Remove(requestHandle);
+			return _loop.Allocs.FreeRequest(requestHandle);
 		}
 
 		internal byte[] CopyAndDelete(IntPtr requestHandle, int size)
@@ -85,7 +85,7 @@ namespace SharpUV
 				return new byte[0];
 
 			var data = _buffer.CopyAndDeleteBuffer(_writes[requestHandle], size);
-			_loop.Allocs.Free(requestHandle);
+			_loop.Allocs.FreeRequest(requestHandle);
 			_writes.Remove(requestHandle);
 			return data;
 		}

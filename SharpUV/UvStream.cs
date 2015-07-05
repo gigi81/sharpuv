@@ -38,26 +38,6 @@ namespace SharpUV
 		private UvDataCallback _writeCallback;
 		private UvCallback _shutdownCallback;
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="loop">Loop</param>
-		/// <param name="handle">Pointer to a <typeparamref name="Libuv.uv_stream_t"/> structure</param>
-		protected UvStream(Loop loop, IntPtr handle)
-			: base(loop, handle)
-		{
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="loop">Loop</param>
-		/// <param name="handleSize">Size of the <typeparamref name="Libuv.uv_stream_t"/> structure to allocate</param>
-		protected UvStream(Loop loop, int handleSize)
-			: base(loop, handleSize)
-		{
-		}
-
 		internal UvStream(Loop loop, uv_handle_type handleType)
 			: base(loop, handleType)
 		{
@@ -154,19 +134,20 @@ namespace SharpUV
 
 		public void Shutdown(Action<UvArgs> callback = null)
 		{
-			IntPtr req = this.Alloc(uv_req_type.UV_SHUTDOWN);
+			IntPtr req = IntPtr.Zero;
 
 			try
 			{
 				if (_isReading)
 					this.ReadStop();
 
+				req = this.Loop.Requests.Create(uv_req_type.UV_SHUTDOWN);
 				CheckError(Uvi.uv_shutdown(req, this.Handle, _shutdownDelegate));
 				_shutdownCallback = new UvCallback(this, callback);
 			}
 			catch (Exception)
 			{
-				this.Free(req);
+				this.Loop.Requests.Delete(req);
 				throw;
 			}
 		}
@@ -176,7 +157,7 @@ namespace SharpUV
 			var callback = _shutdownCallback;
 			_shutdownCallback = null;
 
-			this.Free(req);
+			this.Loop.Requests.Delete(req);
 			callback.Invoke(status, this.OnShutdown, this.ShuttedDown);
 			this.Close();
 		}

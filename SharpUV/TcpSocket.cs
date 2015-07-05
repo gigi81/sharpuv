@@ -33,6 +33,7 @@ namespace SharpUV
 		public event EventHandler<UvArgs<IPEndPoint[]>> Resolved;
 		public event EventHandler<UvArgs> Connected;
 
+		private IntPtr _connectionReq = IntPtr.Zero;
 		private IntPtr _resolveReq = IntPtr.Zero;
 		private IntPtr _address = IntPtr.Zero;
 
@@ -44,7 +45,7 @@ namespace SharpUV
 		public TcpClientSocket(Loop loop)
 			: base(loop)
 		{
-			this.Connection = this.Alloc(uv_req_type.UV_CONNECT);
+			_connectionReq = this.Loop.Requests.Create(uv_req_type.UV_CONNECT);
 		}
 
 		#region Delegates
@@ -64,32 +65,32 @@ namespace SharpUV
 		/// Connection handle
 		/// </summary>
 		/// <remarks>Handle type is <typeparamref name="Libuv.uv_connect_t"/></remarks>
-		internal IntPtr Connection { get; set; }
+		internal IntPtr Connection { get { return _connectionReq; } }
 
 		private UvEndPointsCallback _resolveCallback;
 
 		public void Resolve(string node, string service, Action<UvArgs<IPEndPoint[]>> callback = null)
 		{
 			var hints = addrinfo.CreateHints();
-			var hintsPtr = this.Alloc(Marshal.SizeOf(typeof(addrinfo)));
+			var hintsPtr = this.Loop.Allocs.Alloc(Marshal.SizeOf(typeof(addrinfo)));
 			Marshal.StructureToPtr(hints, hintsPtr, fDeleteOld: false);
 
 			try
 			{
-				_resolveReq = this.Alloc(uv_req_type.UV_GETADDRINFO);
+				_resolveReq = this.Loop.Requests.Create(uv_req_type.UV_GETADDRINFO);
 				CheckError(Uvi.uv_getaddrinfo(this.Loop.Handle, _resolveReq, _resolveDelegate, node, service, hintsPtr));
 				this.Status = HandleStatus.Resolving;
 				_resolveCallback = new UvEndPointsCallback(this, callback);
 			}
 			catch (Exception)
 			{
-				this.Free(_resolveReq);
+				this.Loop.Requests.Delete(_resolveReq);
 				_connectCallback = null;
 				throw;
 			}
 			finally
 			{
-				this.Free(hintsPtr);
+				this.Loop.Allocs.Free(hintsPtr);
 			}
 		}
 
@@ -112,7 +113,7 @@ namespace SharpUV
 			finally
 			{
 				Uvi.uv_freeaddrinfo(addrinfo);
-				this.Free(_resolveReq);
+				this.Loop.Requests.Delete(_resolveReq);
 			}
 		}
 
@@ -143,7 +144,7 @@ namespace SharpUV
 			}
 			catch (Exception)
 			{
-				_address = Free(_address);
+				_address = this.Loop.Allocs.Free(_address);
 				_connectCallback = null;
 				throw;
 			}
@@ -166,13 +167,11 @@ namespace SharpUV
 		{
 			if(!this.IsDisposed)
 			{
-				if (this.Connection != IntPtr.Zero)
-					this.Connection = this.Free(this.Connection);
+				_connectionReq = this.Loop.Requests.Delete(_connectionReq);
 			}
 
 			base.Dispose(disposing);
-
-			_address = Free(_address);
+			_address = this.Loop.Allocs.Free(_address);
 		}
 	}
 

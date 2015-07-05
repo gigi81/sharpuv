@@ -3,26 +3,53 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Libuv;
 
 namespace SharpUV
 {
 	internal class LoopAllocs
 	{
-		private readonly Dictionary<IntPtr, ulong> _allocs = new Dictionary<IntPtr, ulong>();
+		private readonly Dictionary<IntPtr, int> _allocs = new Dictionary<IntPtr, int>();
 		private ulong _allocated = 0;
 		private ulong _deallocated = 0;
+		private uint _allocatedHandles = 0;
+
+		internal IntPtr AllocHandle(uv_handle_type handleType)
+		{
+			var ret = Alloc(Uvi.uv_handle_size(handleType));
+			_allocatedHandles++;
+			return ret;
+		}
+
+		internal IntPtr AllocRequest(uv_req_type requestType)
+		{
+			return Alloc(Uvi.uv_req_size(requestType));
+		}
 
 		internal IntPtr Alloc(int size)
 		{
-			return this.Alloc((ulong)size);
+			if (size <= 0)
+				return IntPtr.Zero;
+
+			var ret = Marshal.AllocHGlobal(size);
+			_allocs.Add(ret, size);
+			_allocated += (ulong)size;
+			return ret;
 		}
 
-		internal IntPtr Alloc(ulong size)
+		internal IntPtr FreeHandle(IntPtr ptr)
 		{
-			var ret = Marshal.AllocHGlobal((int)size);
-			_allocs.Add(ret, size);
-			_allocated += size;
+			if (ptr == IntPtr.Zero)
+				return ptr;
+
+			var ret = this.Free(ptr);
+			_allocatedHandles--;
 			return ret;
+		}
+
+		internal IntPtr FreeRequest(IntPtr ptr)
+		{
+			return this.Free(ptr);
 		}
 
 		internal IntPtr Free(IntPtr ptr)
@@ -30,7 +57,7 @@ namespace SharpUV
 			if (ptr == IntPtr.Zero)
 				return ptr;
 
-			_deallocated += _allocs[ptr];
+			_deallocated += (ulong)_allocs[ptr];
 			_allocs.Remove(ptr);
 
 			Marshal.FreeHGlobal(ptr);
@@ -49,5 +76,10 @@ namespace SharpUV
 		public ulong AllocatedBytes { get { return _allocated; } }
 
 		public ulong DeAllocatedBytes { get { return _deallocated; } }
+
+		/// <summary>
+		/// The number of current allocated handles
+		/// </summary>
+		public uint CurrentlyAllocatedHandles { get { return _allocatedHandles; } }
 	}
 }

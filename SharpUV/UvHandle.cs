@@ -40,35 +40,16 @@ namespace SharpUV
 
 	public abstract class UvHandle : IDisposable
 	{
-	    private static int _allocatedHandles = 0;
-
 		public event EventHandler<UvArgs> Closed;
 
         private readonly Loop _loop;
         private IntPtr _handle;
         private UvCallback _closeCallback;
 
-		/// <summary>
-		/// The number of current allocated handles
-		/// </summary>
-        public static int CurrentlyAllocatedHandles { get { return _allocatedHandles; } }
-
-		protected UvHandle(Loop loop, IntPtr handle)
-			: this(loop)
-		{
-			_handle = handle;
-		}
-
-		protected UvHandle(Loop loop, int handleSize)
-			: this(loop)
-		{
-            _handle = this.Alloc(handleSize);
-		}
-
 		internal UvHandle(Loop loop, uv_handle_type handleType)
 			: this(loop)
 		{
-            _handle = this.Alloc(handleType);
+            _handle = loop.Allocs.AllocHandle(handleType);
 		}
 
 		private UvHandle(Loop loop)
@@ -77,8 +58,6 @@ namespace SharpUV
 
 			this.Status = HandleStatus.Closed;
 			this.InitDelegates();
-
-            _allocatedHandles++;
 		}
 
 		~UvHandle()
@@ -144,26 +123,6 @@ namespace SharpUV
 			this.Loop.CheckError(code);
 		}
 
-		internal IntPtr Alloc(int size)
-		{
-			return this.Loop.Allocs.Alloc(size);
-		}
-
-		internal IntPtr Alloc(uv_handle_type handleType)
-		{
-			return Alloc(Uvi.uv_handle_size(handleType));
-		}
-
-		internal IntPtr Alloc(uv_req_type requestType)
-		{
-			return Alloc(Uvi.uv_req_size(requestType));
-		}
-
-		internal IntPtr Free(IntPtr ptr)
-		{
-			return this.Loop.Allocs.Free(ptr);
-		}
-
 		#region Disposal Management
 		/// <summary>
 		/// Indicates if the object has been disposed
@@ -186,12 +145,7 @@ namespace SharpUV
 			if (this.IsDisposed)
 				return;
 
-            if (_handle != IntPtr.Zero)
-		    {
-                _handle = this.Free(_handle);
-                _allocatedHandles--;
-		    }
-
+            _handle = _loop.Allocs.FreeHandle(_handle);
             this.IsDisposed = true;
 		    GC.SuppressFinalize(this);
 		}

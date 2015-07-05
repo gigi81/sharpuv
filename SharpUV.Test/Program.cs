@@ -57,7 +57,7 @@ namespace SharpUV.Test
 			Thread.Sleep(2000);
 
 			Console.WriteLine("Memory report: allocated {0}, deallocated {1}", Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
-			Console.WriteLine("Handles not deallocated: {0}", UvHandle.CurrentlyAllocatedHandles);
+			Console.WriteLine("Handles not deallocated: {0}", Loop.Default.CurrentlyAllocatedHandles);
 			Console.WriteLine("Pending loop works: {0}", Loop.Default.PendingWorks);
 			Console.WriteLine("Transferred data {0} MB", total / (1024 * 1024));
 			Console.WriteLine("Total time {0} seconds", stopWatch.Elapsed.TotalSeconds);

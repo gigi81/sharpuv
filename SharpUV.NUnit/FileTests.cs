@@ -42,7 +42,7 @@ namespace SharpUV.NUnit
 
 			Loop.Default.Run();
 
-			var handle2 = new FileHandle();
+			var handle2 = new Filesystem();
 			handle2.Stat(TestFilePath, (args) => {
 				Assert.AreEqual(data.Length, args.Stat.st_size);
 			});
@@ -60,7 +60,7 @@ namespace SharpUV.NUnit
 
 			Loop.Default.Run();
 
-			var handle2 = new FileHandle();
+			var handle2 = new Filesystem();
 			handle2.Delete(TestFilePath, (args) =>
 			{
 				Assert.IsTrue(args.Successful);
@@ -69,7 +69,7 @@ namespace SharpUV.NUnit
 			Loop.Default.Run();
 		}
 
-		internal class WriteFileHandle : FileHandle
+		internal class WriteFileHandle : File
 		{
 			private string _data;
 
@@ -96,7 +96,7 @@ namespace SharpUV.NUnit
 			}
 		}
 
-        internal class ReadFileHandle : FileHandle
+        internal class ReadFileHandle : File
         {
 			byte[] _data;
 

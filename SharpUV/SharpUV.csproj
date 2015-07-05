@@ -49,7 +49,8 @@
     <Compile Include="Callbacks\UvEndPointsCallback.cs" />
     <Compile Include="Callbacks\UvTcpServerSocketCallback.cs" />
     <Compile Include="FileEnums.cs" />
-    <Compile Include="FileHandle.cs" />
+    <Compile Include="File.cs" />
+    <Compile Include="Filesystem.cs" />
     <Compile Include="Libuv\AddrInfo.cs" />
     <Compile Include="Libuv\OffT.cs" />
     <Compile Include="Libuv\SizeT.cs" />

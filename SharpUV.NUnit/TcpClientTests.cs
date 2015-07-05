@@ -21,7 +21,7 @@ namespace SharpUV.NUnit
 
             GC.Collect();
             GC.Collect();
-            Loop.Default.Run();
+            Loop.Current.Run();
 
             Console.WriteLine("done");
         }

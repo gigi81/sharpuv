@@ -38,7 +38,7 @@ namespace SharpUV
 		private IntPtr _address = IntPtr.Zero;
 
 		public TcpClientSocket()
-			: this(Loop.Default)
+			: this(Loop.Current)
 		{
 		}
 

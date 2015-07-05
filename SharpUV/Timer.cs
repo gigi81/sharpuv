@@ -36,7 +36,7 @@ namespace SharpUV
 		private uv_timer_cb _tick;
 
 		public Timer()
-			: this(Loop.Default)
+			: this(Loop.Current)
 		{
 		}
 

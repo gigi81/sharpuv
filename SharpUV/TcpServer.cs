@@ -40,7 +40,7 @@ namespace SharpUV
 	    private IntPtr _address = IntPtr.Zero;
 
 		public TcpServer()
-			: this(Loop.Default)
+			: this(Loop.Current)
 		{
 		}
 
@@ -89,10 +89,7 @@ namespace SharpUV
 
 		private void OnClientConnected(IntPtr server, int status)
 		{
-            var callback = _connectCallback;
-            _connectCallback = null;
-
-            callback.Invoke(this.AddClient(), this.OnClientConnected, this.ClientConnected);
+			_connectCallback.Invoke(this.AddClient(), this.OnClientConnected, this.ClientConnected);
 		}
 
         private TcpServerSocket AddClient()

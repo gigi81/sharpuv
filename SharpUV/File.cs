@@ -47,7 +47,7 @@ namespace SharpUV
 		private int _file = 0;
 
 		public File()
-			: this(Loop.Default)
+			: this(Loop.Current)
 		{
 		}
 

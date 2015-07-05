@@ -21,15 +21,15 @@ namespace SharpUV.NUnit
 			var handle = new WriteFileHandle(data);
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
             var handle2 = new ReadFileHandle();
             handle2.Open(TestFilePath, FileAccessMode.ReadOnly, FileOpenMode.OnlyIfExists, FilePermissions.S_IRUSR);
 
-            Loop.Default.Run();
+            Loop.Current.Run();
 
 			Assert.AreEqual(data, handle2.Content);
-			Assert.AreEqual(Loop.Default.AllocatedBytes, Loop.Default.DeAllocatedBytes);
+			Assert.AreEqual(Loop.Current.AllocatedBytes, Loop.Current.DeAllocatedBytes);
 		}
 
 		[Test]
@@ -40,14 +40,14 @@ namespace SharpUV.NUnit
 			var handle = new WriteFileHandle(data);
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
 			var handle2 = new Filesystem();
 			handle2.Stat(TestFilePath, (args) => {
 				Assert.AreEqual(data.Length, args.Stat.st_size);
 			});
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 		}
 
 		[Test]
@@ -58,7 +58,7 @@ namespace SharpUV.NUnit
 			var handle = new WriteFileHandle(data);
 			handle.Open(TestFilePath, FileAccessMode.WriteOnly, FileOpenMode.Create | FileOpenMode.Truncate, FilePermissions.S_IRUSR | FilePermissions.S_IWUSR);
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
 			var handle2 = new Filesystem();
 			handle2.Delete(TestFilePath, (args) =>
@@ -66,7 +66,7 @@ namespace SharpUV.NUnit
 				Assert.IsTrue(args.Successful);
 			});
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 		}
 
 		internal class WriteFileHandle : File

@@ -35,7 +35,7 @@ namespace SharpUV
 		private bool _isReading = false;
 
 		private UvDataCallback _readCallback;
-		private UvDataCallback _writeCallback;
+		private readonly Dictionary<IntPtr, UvDataCallback> _writeCallbacks = new Dictionary<IntPtr, UvDataCallback>();
 		private UvCallback _shutdownCallback;
 
 		internal UvStream(Loop loop, uv_handle_type handleType)
@@ -114,7 +114,7 @@ namespace SharpUV
 			{
 				req = this.Loop.Requests.Create(uv_req_type.UV_WRITE, data, offset, length);
 				CheckError((Uvi.uv_write(req, this.Handle, new[] { this.Loop.Requests[req] }, 1, _writeDelegate)));
-				_writeCallback = new UvDataCallback(this, callback, data);
+				_writeCallbacks.Add(req, new UvDataCallback(this, callback, data));
 			}
 			catch (Exception)
 			{
@@ -125,8 +125,8 @@ namespace SharpUV
 
 		private void OnWrite(IntPtr requestHandle, int status)
 		{
-			var callback = _writeCallback;
-			_writeCallback = null;
+			var callback = _writeCallbacks[requestHandle];
+			_writeCallbacks.Remove(requestHandle);
 
 			this.Loop.Requests.Delete(requestHandle);
 			callback.Invoke(status, this.OnWrite, this.DataWrite);

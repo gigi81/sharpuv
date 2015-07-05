@@ -14,13 +14,13 @@ namespace SharpUV.NUnit
 		{
 			bool run = false;
 
-			Loop.Default.QueueWork(() => { run = true; });
-			Assert.AreEqual(1, Loop.Default.PendingWorks);
+			Loop.Current.QueueWork(() => { run = true; });
+			Assert.AreEqual(1, Loop.Current.PendingWorks);
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
 			Assert.AreEqual(true, run);
-			Assert.AreEqual(0, Loop.Default.PendingWorks);
+			Assert.AreEqual(0, Loop.Current.PendingWorks);
 		}
 
 		[Test]
@@ -28,14 +28,14 @@ namespace SharpUV.NUnit
 		{
 			bool run = false, after = false;
 
-			Loop.Default.QueueWork(() => { run = true; }, () => { after = true; });
-			Assert.AreEqual(1, Loop.Default.PendingWorks);
+			Loop.Current.QueueWork(() => { run = true; }, () => { after = true; });
+			Assert.AreEqual(1, Loop.Current.PendingWorks);
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
 			Assert.AreEqual(true, run);
 			Assert.AreEqual(true, after);
-			Assert.AreEqual(0, Loop.Default.PendingWorks);
+			Assert.AreEqual(0, Loop.Current.PendingWorks);
 		}
 	}
 }

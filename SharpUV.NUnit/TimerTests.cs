@@ -21,7 +21,7 @@ namespace SharpUV.NUnit
 			Stopwatch stopwatch = new Stopwatch();
 			Timer timer = new Timer();
 
-			Loop.Default.QueueWork(() => {
+			Loop.Current.QueueWork(() => {
 				stopwatch.Start();
 				timer.Start(delay, TimeSpan.Zero, () =>
 				{
@@ -31,7 +31,7 @@ namespace SharpUV.NUnit
 				});
 			});
 
-			Loop.Default.Run();
+			Loop.Current.Run();
 
 			Assert.GreaterOrEqual(stopwatch.Elapsed, delay.Subtract(tollerance));
 			Assert.Less(stopwatch.Elapsed, delay.Add(tollerance));

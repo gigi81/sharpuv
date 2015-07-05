@@ -76,11 +76,14 @@ namespace SharpUV
 				throw new UvException(code);
 		}
 
-		public IntPtr Handle { get; private set; }
+		internal IntPtr Handle { get; private set; }
 
-		public static Loop Default
+		/// <summary>
+		/// The Loop for the current thread
+		/// </summary>
+		public static Loop Current
 		{
-			get { return DefaultLoop; }
+			get { return LoopsCollection.CurrentLoop; }
 		}
 
         public void QueueWork(Action run, Action after = null)

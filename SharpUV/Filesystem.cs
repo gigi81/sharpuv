@@ -14,7 +14,7 @@ namespace SharpUV
 		public event EventHandler<UvArgs> Deleted;
 
 		public Filesystem()
-			: this(Loop.Default)
+			: this(Loop.Current)
 		{
 		}
 

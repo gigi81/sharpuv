@@ -130,11 +130,9 @@ namespace SharpUV
 		}
 		#endregion
 
-        public ulong AllocatedBytes { get { return this.Allocs.AllocatedBytes; } }
+        public ulong AllocatedBytes { get { return this.Allocs.AllocatedMemory; } }
 
-        public ulong DeAllocatedBytes { get { return this.Allocs.DeAllocatedBytes; } }
-
-		public uint CurrentlyAllocatedHandles { get { return this.Allocs.CurrentlyAllocatedHandles; } }
+		public uint AllocatedHandles { get { return this.Allocs.AllocatedHandles; } }
 
         public int PendingWorks { get { return this.Works.Count; } }
 

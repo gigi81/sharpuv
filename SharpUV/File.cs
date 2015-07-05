@@ -123,6 +123,11 @@ namespace SharpUV
             this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Truncate | FileOpenMode.BinaryMode, 0, callback);
         }
 
+		public void OpenAppend(string path, Action<UvArgs> callback = null)
+		{
+			this.Open(path, FileAccessMode.WriteOnly, FileOpenMode.Append | FileOpenMode.BinaryMode, 0, callback);
+		}
+
 		public void Open(string path, FileAccessMode access, FileOpenMode mode, FilePermissions permissions, Action<UvArgs> callback = null)
 		{
             if (this.IsDisposed)
@@ -149,7 +154,7 @@ namespace SharpUV
 
 		private static int uv_fs_open(Loop loop, IntPtr req, string path, FileAccessMode rw, FileOpenMode open, FilePermissions permissions, uv_fs_cb cb)
 		{
-			return Uvi.uv_fs_open(loop.Handle, req, Encoding.ASCII.GetBytes(path), (int)rw | (int)open, (int)permissions, cb);
+			return Uvi.uv_fs_open(loop.Handle, req, path, (int)rw | (int)open, (int)permissions, cb);
 		}
 
 		private void OnOpen(IntPtr req)

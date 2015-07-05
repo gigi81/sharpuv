@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace SharpUV
@@ -46,6 +44,23 @@ namespace SharpUV
 				{
 					_lock.ReleaseWriterLock();
 				}
+			}
+		}
+
+		internal static void FreeAll()
+		{
+			_lock.AcquireWriterLock(1000);
+
+			try
+			{
+				foreach(var loop in _loops.Values)
+					loop.Dispose();
+
+				_loops.Clear();
+			}
+			finally
+			{
+				_lock.ReleaseWriterLock();
 			}
 		}
 	}

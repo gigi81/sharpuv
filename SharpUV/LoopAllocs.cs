@@ -10,8 +10,7 @@ namespace SharpUV
 	internal class LoopAllocs
 	{
 		private readonly Dictionary<IntPtr, int> _allocs = new Dictionary<IntPtr, int>();
-		private ulong _allocated = 0;
-		private ulong _deallocated = 0;
+		private ulong _allocatedMemory = 0;
 		private uint _allocatedHandles = 0;
 
 		internal IntPtr AllocHandle(uv_handle_type handleType)
@@ -33,7 +32,7 @@ namespace SharpUV
 
 			var ret = Marshal.AllocHGlobal(size);
 			_allocs.Add(ret, size);
-			_allocated += (ulong)size;
+			_allocatedMemory += (ulong)size;
 			return ret;
 		}
 
@@ -57,7 +56,7 @@ namespace SharpUV
 			if (ptr == IntPtr.Zero)
 				return ptr;
 
-			_deallocated += (ulong)_allocs[ptr];
+			_allocatedMemory -= (ulong)_allocs[ptr];
 			_allocs.Remove(ptr);
 
 			Marshal.FreeHGlobal(ptr);
@@ -73,13 +72,11 @@ namespace SharpUV
 			}
 		}
 
-		public ulong AllocatedBytes { get { return _allocated; } }
-
-		public ulong DeAllocatedBytes { get { return _deallocated; } }
+		public ulong AllocatedMemory { get { return _allocatedMemory; } }
 
 		/// <summary>
 		/// The number of current allocated handles
 		/// </summary>
-		public uint CurrentlyAllocatedHandles { get { return _allocatedHandles; } }
+		public uint AllocatedHandles { get { return _allocatedHandles; } }
 	}
 }

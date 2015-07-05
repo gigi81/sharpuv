@@ -29,7 +29,8 @@ namespace SharpUV.NUnit
             Loop.Current.Run();
 
 			Assert.AreEqual(data, handle2.Content);
-			Assert.AreEqual(Loop.Current.AllocatedBytes, Loop.Current.DeAllocatedBytes);
+			Assert.AreEqual(0, Loop.Current.AllocatedBytes);
+			Assert.AreEqual(0, Loop.Current.AllocatedHandles);
 		}
 
 		[Test]

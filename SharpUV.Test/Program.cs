@@ -56,8 +56,8 @@ namespace SharpUV.Test
 			//seems like the garbage collector is 
 			Thread.Sleep(2000);
 
-			Console.WriteLine("Memory report: allocated {0}, deallocated {1}", Loop.Current.AllocatedBytes, Loop.Current.DeAllocatedBytes);
-			Console.WriteLine("Handles not deallocated: {0}", Loop.Current.CurrentlyAllocatedHandles);
+			Console.WriteLine("Allocated memory: {0}", Loop.Current.AllocatedBytes);
+			Console.WriteLine("Handles not deallocated: {0}", Loop.Current.AllocatedHandles);
 			Console.WriteLine("Pending loop works: {0}", Loop.Current.PendingWorks);
 			Console.WriteLine("Transferred data {0} MB", total / (1024 * 1024));
 			Console.WriteLine("Total time {0} seconds", stopWatch.Elapsed.TotalSeconds);

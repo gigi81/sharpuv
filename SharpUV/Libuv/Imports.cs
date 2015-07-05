@@ -197,7 +197,7 @@ namespace Libuv
 		/// <param name="cb"></param>
 		/// <returns></returns>
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_fs_open(IntPtr loop, IntPtr req, byte[] path, int flags, int mode, uv_fs_cb cb);
+		internal static extern int uv_fs_open(IntPtr loop, IntPtr req, string path, int flags, int mode, uv_fs_cb cb);
 
 		/// <summary>
 		/// 

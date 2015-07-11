@@ -45,6 +45,7 @@ namespace SharpUV
         private readonly Loop _loop;
         private IntPtr _handle;
         private UvCallback _closeCallback;
+		private bool _disposeAfterClose = false;
 
 		internal UvHandle(Loop loop, uv_handle_type handleType)
 			: this(loop)
@@ -97,7 +98,7 @@ namespace SharpUV
 			if (this.Status != HandleStatus.Open)
 				return;
 
-			this.DisposeAfterClose = dispose;
+			_disposeAfterClose = dispose;
 			Uvi.uv_close(this.Handle, _closeDelegate);
 			this.Status = HandleStatus.Closing;
             _closeCallback = new UvCallback(this, callback);
@@ -110,7 +111,7 @@ namespace SharpUV
 
 			this.Status = HandleStatus.Closed;
             callback.Invoke((int)handle, this.OnClose, this.Closed);
-			if (this.DisposeAfterClose)
+			if (_disposeAfterClose)
 				this.Dispose(true);
 		}
 
@@ -150,7 +151,5 @@ namespace SharpUV
 		    GC.SuppressFinalize(this);
 		}
 		#endregion
-
-		public bool DisposeAfterClose { get; set; }
 	}
 }

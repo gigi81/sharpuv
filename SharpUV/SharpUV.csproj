@@ -57,6 +57,8 @@
     <Compile Include="Libuv\SizeT.cs" />
     <Compile Include="Libuv\Imports.cs" />
     <Compile Include="LoopsCollection.cs" />
+    <Compile Include="TcpClientSocket.cs" />
+    <Compile Include="TcpServerSocket.cs" />
     <Compile Include="UvStat.cs" />
     <Compile Include="Loop.cs" />
     <Compile Include="LoopAllocs.cs" />

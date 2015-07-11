@@ -158,8 +158,15 @@ namespace SharpUV
 			_shutdownCallback = null;
 
 			this.Loop.Requests.Delete(req);
-			callback.Invoke(status, this.OnShutdown, this.ShuttedDown);
-			this.Close();
+
+			try
+			{
+				callback.Invoke(status, this.OnShutdown, this.ShuttedDown);
+			}
+			finally
+			{
+				this.Close();
+			}
 		}
 
 		protected virtual void OnRead(UvDataArgs args)

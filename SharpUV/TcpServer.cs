@@ -87,6 +87,22 @@ namespace SharpUV
 		    }
 		}
 
+		public void DisconnectAllClients()
+		{
+			foreach (var client in _clients)
+			{
+				try
+				{
+					if (client.Status == HandleStatus.Open)
+						client.Shutdown();
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine("Client shutdown returned error: {0}", ex.Message);
+				}
+			}
+		}
+
 		private void OnClientConnected(IntPtr server, int status)
 		{
 			_connectCallback.Invoke(this.AddClient(), this.OnClientConnected, this.ClientConnected);
@@ -95,10 +111,14 @@ namespace SharpUV
         private TcpServerSocket AddClient()
         {
             var client = this.CreateClientSocket();
-            client.Closed += (sender, e) => { _clients.Remove(client); };
             _clients.Add(client);
             return client;
         }
+
+		internal void RemoveClient(TcpServerSocket client)
+		{
+			_clients.Remove(client);
+		}
 
         protected virtual void OnClientConnected(UvArgs<TcpServerSocket> args)
         {
@@ -111,19 +131,14 @@ namespace SharpUV
 
 		protected override void OnClose(UvArgs args)
 		{
-			foreach (var client in _clients)
-			{
-				try
-				{
-					client.Shutdown();
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine("Client shutdown returned error: {0}", ex.Message);
-				}
-			}
+			this.DisconnectAllClients();
+			base.OnClose(args);
+		}
 
-            _address = this.Loop.Allocs.Free(_address);
+		protected override void Dispose(bool disposing)
+		{
+			_address = this.Loop.Allocs.Free(_address);
+			base.Dispose(disposing);
 		}
 	}
 }

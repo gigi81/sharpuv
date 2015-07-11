@@ -42,6 +42,7 @@ namespace SharpUV.Test
 			protected override void OnClose(UvArgs args)
 			{
 				Console.WriteLine("Client disconnected");
+				base.OnClose(args);
 			}
 		}
 	}

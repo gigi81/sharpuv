@@ -75,6 +75,7 @@ namespace SharpUV
 		{
 		    try
 		    {
+                _address = this.Loop.Allocs.Free(_address);
 		        _address = TcpSocket.AllocSocketAddress(endpoint, this.Loop);
                 CheckError(Uvi.uv_tcp_bind(this.Handle, _address, 0));
                 CheckError(Uvi.uv_listen(this.Handle, this.BackLog, _connectionDelegate));

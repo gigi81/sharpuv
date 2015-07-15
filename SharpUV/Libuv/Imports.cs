@@ -270,18 +270,48 @@ namespace Libuv
 		/// <param name="cb"></param>
 		/// <returns></returns>
 		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_unlink(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_readdir(IntPtr loop, IntPtr req, string path, int flags, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int uv_fs_stat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="loop">(uv_loop_t*)</param>
-		/// <param name="req">(uv_fs_t*)</param>
-		/// <param name="path"></param>
-		/// <param name="cb"></param>
-		/// <returns></returns>
-		[DllImport (ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_fs_unlink(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_fstat(IntPtr loop, IntPtr req, uv_file file, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_rename(IntPtr loop, IntPtr req, string path, string new_path, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_fsync(IntPtr loop, IntPtr req, uv_file file, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_fdatasync(IntPtr loop, IntPtr req, uv_file file, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_ftruncate(IntPtr loop, IntPtr req, uv_file file, long offset, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_sendfile(IntPtr loop, IntPtr req, uv_file out_fd, uv_file in_fd, long in_offset,
+			[MarshalAs(UnmanagedType.CustomMarshaler, MarshalType = "Libuv.SizeTMarshaler")] SizeT length, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_chmod(IntPtr loop, IntPtr req, string path, int mode, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_utime(IntPtr loop, IntPtr req, string path, double atime, double mtime, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_futime(IntPtr loop, IntPtr req, uv_file file, double atime, double mtime, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_lstat(IntPtr loop, IntPtr req, string path, uv_fs_cb cb);
+
+		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int uv_fs_link(IntPtr loop, IntPtr req, string path, string new_path, uv_fs_cb cb);
+
 
 		#endregion
 

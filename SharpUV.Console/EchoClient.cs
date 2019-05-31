@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 
-namespace SharpUV.Test
+namespace SharpUV.Console
 {
 	class EchoClient : TcpClientSocket
 	{

@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using NUnit.Framework;
 
-namespace SharpUV.NUnit
+namespace SharpUV.Tests
 {
     [TestFixture]
     public class TcpClientTests

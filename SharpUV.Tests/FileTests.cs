@@ -3,7 +3,7 @@ using System.Text;
 using NUnit.Framework;
 using SharpUV;
 
-namespace SharpUV.NUnit
+namespace SharpUV.Tests
 {
 	[TestFixture]
 	public class FileTests

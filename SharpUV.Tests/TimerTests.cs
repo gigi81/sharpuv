@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using NUnit.Framework;
 
-namespace SharpUV.NUnit
+namespace SharpUV.Tests
 {
 	[TestFixture]
 	public class TimerTests

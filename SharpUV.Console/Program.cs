@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using SharpUV;
 
-namespace SharpUV.Test
+namespace SharpUV.Console
 {
 	class Program
 	{

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using NUnit.Framework;
+using Xunit;
 
 namespace SharpUV.Tests
 {
-	[TestFixture]
 	public class TimerTests
 	{
-		[Test]
+		[Fact]
 		public void Delay()
 		{
 			//delay to test (3 seconds)
@@ -33,8 +32,8 @@ namespace SharpUV.Tests
 
 			Loop.Current.Run();
 
-			Assert.GreaterOrEqual(stopwatch.Elapsed, delay.Subtract(tollerance));
-			Assert.Less(stopwatch.Elapsed, delay.Add(tollerance));
+			Assert.True(stopwatch.Elapsed >= delay.Subtract(tollerance));
+			Assert.True(stopwatch.Elapsed < delay.Add(tollerance));
 		}
 	}
 }

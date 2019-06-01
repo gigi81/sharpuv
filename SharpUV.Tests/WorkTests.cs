@@ -2,40 +2,39 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 
 namespace SharpUV.Tests
 {
-	[TestFixture]
 	public class WorkTests
 	{
-		[Test]
+		[Fact]
 		public void ExecuteWork()
 		{
 			bool run = false;
 
 			Loop.Current.QueueWork(() => { run = true; });
-			Assert.AreEqual(1, Loop.Current.PendingWorks);
+			Assert.Equal(1, Loop.Current.PendingWorks);
 
 			Loop.Current.Run();
 
-			Assert.AreEqual(true, run);
-			Assert.AreEqual(0, Loop.Current.PendingWorks);
+            Assert.True(run);
+			Assert.Equal(0, Loop.Current.PendingWorks);
 		}
 
-		[Test]
+		[Fact]
 		public void ExecuteWorkAndAfter()
 		{
 			bool run = false, after = false;
 
 			Loop.Current.QueueWork(() => { run = true; }, () => { after = true; });
-			Assert.AreEqual(1, Loop.Current.PendingWorks);
+			Assert.Equal(1, Loop.Current.PendingWorks);
 
 			Loop.Current.Run();
 
-			Assert.AreEqual(true, run);
-			Assert.AreEqual(true, after);
-			Assert.AreEqual(0, Loop.Current.PendingWorks);
+            Assert.True(run);
+            Assert.True(after);
+			Assert.Equal(0, Loop.Current.PendingWorks);
 		}
 	}
 }

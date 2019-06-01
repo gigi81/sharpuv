@@ -1,7 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <PackageId>SharpUV</PackageId>
+    <Description>Binding library for libuv</Description>
+    <Authors>Luigi Grilli</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/gigi81/sharpuv</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/gigi81/sharpuv/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>libuv async</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 
 namespace SharpUV.Tests
 {
-	[TestFixture]
 	public class FileTests
 	{
 		private static string TestFilePath
@@ -12,7 +11,7 @@ namespace SharpUV.Tests
 			get{ return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test.txt"); }
 		}
 
-		[Test]
+		[Fact]
 		public void WriteAndReadFile()
 		{
 			const string data = "test string";
@@ -27,11 +26,11 @@ namespace SharpUV.Tests
 
             Loop.Current.Run();
 
-			Assert.AreEqual(data, handle2.Content);
+			Assert.Equal(data, handle2.Content);
 			this.CheckCurrentLoop();
 		}
 
-		[Test]
+		[Fact]
 		public void StatFile()
 		{
 			const string data = "test string";
@@ -43,13 +42,13 @@ namespace SharpUV.Tests
 
 			var handle2 = new Filesystem();
 			handle2.Stat(TestFilePath, (args) => {
-				Assert.AreEqual(data.Length, args.Stat.st_size);
+				Assert.Equal((ulong)data.Length, args.Stat.st_size);
 			});
 
 			Loop.Current.Run();
 		}
 
-		[Test]
+		[Fact]
 		public void DeleteFile()
 		{
 			const string data = "test string";
@@ -62,13 +61,13 @@ namespace SharpUV.Tests
 			var handle2 = new Filesystem();
 			handle2.Delete(TestFilePath, (args) =>
 			{
-				Assert.IsTrue(args.Successful);
+				Assert.True(args.Successful);
 			});
 
 			Loop.Current.Run();
 		}
 
-		[Test]
+		[Fact]
 		public void CopyFile()
 		{
 			const string data = "test string";
@@ -81,7 +80,7 @@ namespace SharpUV.Tests
 			var handle2 = new Filesystem();
 			handle2.Copy(TestFilePath, TestFilePath + "copy", (args) =>
 			{
-				Assert.IsTrue(args.Successful);
+				Assert.True(args.Successful);
 			});
 
 			Loop.Current.Run();
@@ -89,8 +88,8 @@ namespace SharpUV.Tests
 
 		private void CheckCurrentLoop()
 		{
-			Assert.AreEqual(0, Loop.Current.AllocatedBytes);
-			Assert.AreEqual(0, Loop.Current.AllocatedHandles);
+			Assert.Equal(0u, Loop.Current.AllocatedBytes);
+			Assert.Equal(0u, Loop.Current.AllocatedHandles);
 		}
 
 		internal class WriteFileHandle : File

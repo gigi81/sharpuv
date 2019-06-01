@@ -4,14 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 
 namespace SharpUV.Tests
 {
-    [TestFixture]
     public class TcpClientTests
     {
-        [Test]
+        [Fact]
         public void GetGoogle()
         {
             UvWebClient.Get(new Uri("http://www.google.com"), (args) =>

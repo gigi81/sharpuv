@@ -110,7 +110,7 @@ namespace SharpUV
             _closeCallback = null;
 
 			this.Status = HandleStatus.Closed;
-            callback.Invoke((int)handle, this.OnClose, this.Closed);
+            callback.Invoke(0, this.OnClose, this.Closed);
 			if (_disposeAfterClose)
 				this.Dispose(true);
 		}

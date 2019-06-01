@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ByteArray = SharpUV.ImmutableArray.ImmutableArray<byte>;
 
-namespace SharpUV.Console
+namespace SharpUV.Echo
 {
 	public class DataChecker
 	{

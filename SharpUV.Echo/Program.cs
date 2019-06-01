@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using SharpUV;
 
-namespace SharpUV.Console
+namespace SharpUV.Echo
 {
 	class Program
 	{
@@ -29,7 +29,7 @@ namespace SharpUV.Console
 			server.StartListening(ServerEndPoint);
 
 			//create a pool of clients
-			var pool = new EchoClientsPool(10, 128 * 1024, 1024);
+			var pool = new EchoClientsPool(10, 8 * 1024, 1024);
 			//set to true to verify the data transferred (if enabled will slow down transfer rate)
 			pool.SkipCheck = true;
 			pool.Completed += pool_Completed;

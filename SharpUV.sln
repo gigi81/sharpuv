@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV", "SharpUV\SharpUV.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV.Tests", "SharpUV.Tests\SharpUV.Tests.csproj", "{E4AC8BE3-FC53-4A2A-8BF5-8A82A32CD4A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV.Console", "SharpUV.Console\SharpUV.Console.csproj", "{CD763162-2044-477E-AEF1-7463D356660C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpUV.Echo", "SharpUV.Echo\SharpUV.Echo.csproj", "{CD763162-2044-477E-AEF1-7463D356660C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

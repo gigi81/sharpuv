@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SharpUV.Console
+namespace SharpUV.Echo
 {
 	public class TcpEchoServer : TcpServer
 	{

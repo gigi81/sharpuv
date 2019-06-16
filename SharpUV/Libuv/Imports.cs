@@ -176,7 +176,7 @@ namespace Libuv
 		/// <param name="req">(uv_fs_t*)</param>
 		/// <returns></returns>
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int uv_fs_req_result(IntPtr req);
+		internal static extern SizeT uv_fs_get_result(IntPtr req);
 
 		/// <summary>
 		/// 
@@ -184,7 +184,7 @@ namespace Libuv
 		/// <param name="req">(uv_fs_t*)</param>
 		/// <returns>(uv_stat_t*)</returns>
 		[DllImport(ModuleName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr uv_fs_req_stat(IntPtr req);
+		internal static extern IntPtr uv_fs_get_statbuf(IntPtr req);
 
 		/// <summary>
 		/// 

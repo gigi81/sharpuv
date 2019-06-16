@@ -209,19 +209,19 @@ namespace SharpUV
 
 		private int FreeRequest(IntPtr req)
 		{
-			var ret = Uvi.uv_fs_req_result(req);
+			var ret = Uvi.uv_fs_get_result(req).Value;
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
-			return ret;
+			return (int)ret;
 		}
 
 		private UvStatArgs FreeStatRequest(IntPtr req)
 		{
-			var ret = Uvi.uv_fs_req_result(req);
-			var stat = UvStat.Create(ret == 0 ? Uvi.uv_fs_req_stat(req) : IntPtr.Zero);
+			var ret = Uvi.uv_fs_get_result(req).Value;
+			var stat = UvStat.Create(ret == 0 ? Uvi.uv_fs_get_statbuf(req) : IntPtr.Zero);
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
-			return new UvStatArgs(ret, stat);
+			return new UvStatArgs((int)ret, stat);
 		}
 	}
 }

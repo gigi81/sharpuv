@@ -47,26 +47,12 @@ namespace Libuv
 		internal IntPtr stderr_stream;
 	}
 
-	/// <summary>
-	/// Due to platform differences the user cannot rely on the ordering of the
-	/// base and len members of the uv_buf_t struct. The user is responsible for 
-	/// freeing base after the uv_buf_t is done. Return struct passed by value.
-	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-#if __MonoCS__
-	internal struct uv_buf_t
-	{
-		internal IntPtr data;
-		internal IntPtr len;
-	}
-#else
 	internal struct uv_buf_t
 	{
 		internal IntPtr len;
 		internal IntPtr data;
 	}
-#endif
-
 
 	// From: http://www.elitepvpers.com/forum/co2-programming/159327-advanced-winsock-c.html
 	[StructLayout(LayoutKind.Sequential, Size = 16)]

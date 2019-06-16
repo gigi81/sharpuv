@@ -315,20 +315,20 @@ namespace SharpUV
 			return this.Loop.Requests.Create(uv_req_type.UV_FS, data, offset, length);
 		}
 
-		private uv_file FreeRequest(IntPtr req)
+		private int FreeRequest(IntPtr req)
 		{
-			var ret = Uvi.uv_fs_req_result(req);
+			var result = Uvi.uv_fs_get_result(req);
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
-			return ret;
+			return (int)result.Value;
 		}
 
 		private UvDataArgs FreeReadRequest(IntPtr req)
         {
-            var ret = Uvi.uv_fs_req_result(req);
+            var result = Uvi.uv_fs_get_result(req);
             Uvi.uv_fs_req_cleanup(req);
-            var data = this.Loop.Requests.CopyAndDelete(req, (int)ret);
-            return new UvDataArgs(ret, data);
+            var data = this.Loop.Requests.CopyAndDelete(req, (int)result.Value);
+            return new UvDataArgs((int)result.Value, data);
         }
 
 		#region Dispose Management

@@ -57,7 +57,7 @@ namespace SharpUV
 				if (value < TimeSpan.Zero)
 					throw new ArgumentException("value");
 
-				CheckError(Uvi.uv_timer_set_repeat(this.Handle, value.TotalMilliseconds));
+				//CheckError(Uvi.uv_timer_set_repeat(this.Handle, value.TotalMilliseconds));
 				_repeat = value;
 			}
 		}

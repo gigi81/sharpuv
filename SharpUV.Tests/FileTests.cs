@@ -6,23 +6,20 @@ namespace SharpUV.Tests
 {
 	public class FileTests
 	{
-		private static string TestFilePath
-		{
-			get{ return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test.txt"); }
-		}
-
 		[Fact]
 		public void WriteAndReadFile()
 		{
 			const string data = "test string";
 
+            var path = System.IO.Path.GetTempFileName();
+
 			var handle = new WriteFileHandle(data);
-			handle.OpenWrite(TestFilePath);
+			handle.OpenWrite(path);
 
             Loop.Current.Run();
 
             var handle2 = new ReadFileHandle();
-            handle2.OpenRead(TestFilePath);
+            handle2.OpenRead(path);
 
             Loop.Current.Run();
 
@@ -35,13 +32,15 @@ namespace SharpUV.Tests
 		{
 			const string data = "test string";
 
-			var handle = new WriteFileHandle(data);
-			handle.OpenWrite(TestFilePath);
+            var path = System.IO.Path.GetTempFileName();
+
+            var handle = new WriteFileHandle(data);
+			handle.OpenWrite(path);
 
 			Loop.Current.Run();
 
 			var handle2 = new Filesystem();
-			handle2.Stat(TestFilePath, (args) => {
+			handle2.Stat(path, (args) => {
 				Assert.Equal((ulong)data.Length, args.Stat.st_size);
 			});
 
@@ -53,13 +52,15 @@ namespace SharpUV.Tests
 		{
 			const string data = "test string";
 
-			var handle = new WriteFileHandle(data);
-			handle.OpenWrite(TestFilePath);
+            var path = System.IO.Path.GetTempFileName();
+
+            var handle = new WriteFileHandle(data);
+			handle.OpenWrite(path);
 
 			Loop.Current.Run();
 
 			var handle2 = new Filesystem();
-			handle2.Delete(TestFilePath, (args) =>
+			handle2.Delete(path, (args) =>
 			{
 				Assert.True(args.Successful);
 			});
@@ -72,13 +73,15 @@ namespace SharpUV.Tests
 		{
 			const string data = "test string";
 
-			var handle = new WriteFileHandle(data);
-			handle.OpenWrite(TestFilePath);
+            var path = System.IO.Path.GetTempFileName();
+
+            var handle = new WriteFileHandle(data);
+			handle.OpenWrite(path);
 
 			Loop.Current.Run();
 
 			var handle2 = new Filesystem();
-			handle2.Copy(TestFilePath, TestFilePath + "copy", (args) =>
+			handle2.Copy(path, path + "copy", (args) =>
 			{
 				Assert.True(args.Successful);
 			});

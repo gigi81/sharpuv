@@ -19,14 +19,12 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.InteropServices;
 using Libuv;
 
 namespace SharpUV
 {
+    [Serializable]
 	public class UvException : Exception
 	{
 		private readonly int _error;
@@ -36,7 +34,12 @@ namespace SharpUV
 			_error = error;
 		}
 
-		public override string Message
+        protected UvException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+            : base(info, context)
+        {
+        }
+
+        public override string Message
         {
 			get
 			{

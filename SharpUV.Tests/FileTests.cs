@@ -19,7 +19,7 @@ namespace SharpUV.Tests
 			var handle = new WriteFileHandle(data);
 			handle.OpenWrite(TestFilePath);
 
-			Loop.Current.Run();
+            Loop.Current.Run();
 
             var handle2 = new ReadFileHandle();
             handle2.OpenRead(TestFilePath);

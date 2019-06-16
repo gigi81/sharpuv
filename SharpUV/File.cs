@@ -19,12 +19,7 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
 using Libuv;
-using uv_file = System.Int32;
 
 namespace SharpUV
 {
@@ -317,18 +312,18 @@ namespace SharpUV
 
 		private int FreeRequest(IntPtr req)
 		{
-			var result = Uvi.uv_fs_get_result(req);
+            var result = Uvi.uv_fs_get_result(req).ToInt32();
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
-			return (int)result.Value;
+			return result;
 		}
 
 		private UvDataArgs FreeReadRequest(IntPtr req)
         {
-            var result = Uvi.uv_fs_get_result(req);
+            var result = Uvi.uv_fs_get_result(req).ToInt32();
             Uvi.uv_fs_req_cleanup(req);
-            var data = this.Loop.Requests.CopyAndDelete(req, (int)result.Value);
-            return new UvDataArgs((int)result.Value, data);
+            var data = this.Loop.Requests.CopyAndDelete(req, result);
+            return new UvDataArgs(result, data);
         }
 
 		#region Dispose Management

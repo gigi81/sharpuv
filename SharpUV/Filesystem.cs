@@ -209,7 +209,7 @@ namespace SharpUV
 
 		private int FreeRequest(IntPtr req)
 		{
-			var ret = Uvi.uv_fs_get_result(req).Value;
+			var ret = Uvi.uv_fs_get_result(req);
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);
 			return (int)ret;
@@ -217,7 +217,7 @@ namespace SharpUV
 
 		private UvStatArgs FreeStatRequest(IntPtr req)
 		{
-			var ret = Uvi.uv_fs_get_result(req).Value;
+			var ret = Uvi.uv_fs_get_result(req).ToInt32();
 			var stat = UvStat.Create(ret == 0 ? Uvi.uv_fs_get_statbuf(req) : IntPtr.Zero);
 			Uvi.uv_fs_req_cleanup(req);
 			this.Loop.Requests.Delete(req);

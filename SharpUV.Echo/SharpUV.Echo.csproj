@@ -5,12 +5,13 @@
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject />
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SharpUV\SharpUV.csproj" />
     <PackageReference Include="Grillisoft.ImmutableArray" Version="1.0.0.26" />
-    <PackageReference Include="Libuv" Version="1.10.0" />
+    <PackageReference Include="libuv-shared" Version="1.25.0.2-alpha" />
   </ItemGroup>
 
 </Project>

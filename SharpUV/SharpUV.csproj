@@ -10,10 +10,11 @@
     <PackageLicenseUrl>https://github.com/gigi81/sharpuv/blob/master/LICENSE.txt</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>libuv async</PackageTags>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Libuv" Version="1.10.0" />
+    <PackageReference Include="libuv-shared" Version="1.25.0.2-alpha" />
   </ItemGroup>
 
 </Project>

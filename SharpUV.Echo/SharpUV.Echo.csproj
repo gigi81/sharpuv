@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SharpUV\SharpUV.csproj" />
     <PackageReference Include="Grillisoft.ImmutableArray" Version="1.0.0.26" />
-    <PackageReference Include="libuv-shared" Version="1.25.0.2-alpha" />
+    <PackageReference Include="libuv-shared" Version="1.*" />
   </ItemGroup>
 
 </Project>
